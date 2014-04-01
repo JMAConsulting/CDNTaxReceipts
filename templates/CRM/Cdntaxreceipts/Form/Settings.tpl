@@ -57,6 +57,11 @@
           <p class="description">Receipt numbers are formed by appending the CiviCRM Contribution ID to this prefix. Receipt numbers must be unique within your organization. If you also issue tax receipts using another system, you can use the prefix to ensure uniqueness (e.g. enter 'WEB-' here so all receipts issued through CiviCRM are WEB-00000001, WEB-00000002, etc.)</p></td>
       </tr>
       <tr>
+        <td class="label">{$form.receipt_type.label}</td>
+        <td class="content">{$form.receipt_type.html}
+	<p class="description"><span class="crm-clear-link">(<a href="#" title="unselect" onclick="unselectRadio('receipt_type', '{$form.formName}'); return false;">{ts}clear{/ts}</a>)</span></p></td>
+      </tr>
+      <tr>
         <td class="label">{$form.receipt_authorized_signature_text.label}</td>
         <td class="content">{$form.receipt_authorized_signature_text.html}
           <p class="description">Name and position of the authorizing official to be displayed under the signature line. Defaults to "Authorized Signature" if no name is specified.</p></td>
