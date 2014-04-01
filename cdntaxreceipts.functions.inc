@@ -176,6 +176,7 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
   $pdf->SetAutoPageBreak('', $margin=0);
 
   $pdf_variables = array(
+    "contact_id" => $receipt['contact_id'],
     "preview_mode" => $previewMode,
     "mymargin_left" => $mymargin_left,
     "mymargin_top" => $mymargin_top,
@@ -196,6 +197,26 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
     "inkind_values" => isset($receipt['inkind_values']) ? $receipt['inkind_values'] : array(),
     "receipt_contributions" => $receipt['contributions'],
   );
+  if ($receipt['issue_type'] != 'annual') {
+    $contribution_id = $receipt['contributions'][0]['contribution_id'];
+    $contribution = new CRM_Contribute_BAO_Contribution();
+    $contribution->id = $contribution_id;
+    if (!$contribution->find(TRUE)) {
+      throw new Exception("Couldn't find contribution {$contribution->id} for tax receipt.");
+    }
+    $params = array(
+      'entityID' => $contribution_id,
+      'custom_13' => 1,
+    );
+    $result = CRM_Core_BAO_CustomValueTable::getValues($params);
+    if ($result['is_error'] === 1) {
+      $pdf_variables['receipt_type'] = '';
+      $pdf_variables['description'] = '';
+    } else {
+      $pdf_variables['description'] = $result['custom_13'];
+    } 
+    $pdf_variables['contribution'] = $contribution; 
+  }
 
   $output_files = array($pdf);
   if ( isset($collectedPdf) && ( $receipt['issue_method'] == 'print' || $previewMode ) ) {
@@ -214,10 +235,10 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
       $pdf_variables["mymargin_top"] = $mymargin_top;
       $pdf_variables["is_duplicate"] = FALSE;
       cdntaxreceipts_createPDF($f, $pdf_variables);
-      $pdf_variables["mymargin_top"] = $mymargin_top + 90;
+      $pdf_variables["mymargin_top"] = $mymargin_top + 180;
       $pdf_variables["is_duplicate"] = TRUE;
       cdntaxreceipts_createPDF($f, $pdf_variables);
-      $pdf_variables["mymargin_top"] = $mymargin_top + 90*2;
+      $pdf_variables["mymargin_top"] = $mymargin_top + 180*2;
       $pdf_variables["is_duplicate"] = TRUE;
       cdntaxreceipts_createPDF($f, $pdf_variables);
     }
@@ -251,6 +272,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   $inkind_values = $pdf_variables["inkind_values"];
   $display_year = $pdf_variables["display_year"];
   $issue_type = $pdf_variables["issue_type"];
+  $description = $pdf_variables["description"];
   $receipt_contributions = $pdf_variables['receipt_contributions'];
 
   // Middle center section
@@ -299,22 +321,14 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
     $background_image = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_watermark');
     if ( $background_image ) $pdf->Image(CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_watermark'), $mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart, '', 50);
   }
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 6);
-  $pdf->SetFont('Helvetica', 'B', 8);
-  $pdf->Write(10, "Issue Date: " . $issued_on);
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 12);
-  $pdf->Write(10, "Received on: " . $display_date);
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 18);
-  $pdf->Write(10, "Eligible Amount:  $" . number_format($amount, 2));
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
 
   if ($issue_type == 'annual') {
     $pdf->Write(10, ts("Thank you for giving in %1!", array( 1 => $display_year)));
-    // $pdf->Write(10, "Contribution(s): ");
-    // foreach ($receipt_contributions as $key => $value) {
-    //   $test = $receipt_contributions[$key]['contribution_id'];
-    //   $pdf->Write(10, $receipt_contributions[$key]['contribution_id'] . ' ');
-    // }
+    $pdf->Write(10, "Contribution(s): ");
+    foreach ($receipt_contributions as $key => $value) {
+      $test = $receipt_contributions[$key]['contribution_id'];
+      $pdf->Write(10, $receipt_contributions[$key]['contribution_id'] . ' ');
+    }
   }
   else if (strlen($source_funds) < 36 && strlen($source_funds) > 0) {
     $pdf->Write(10, "Source: " . $source_funds);
@@ -330,22 +344,19 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   }
 
   // Left section
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 2);
   $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->Write(10, $issued_on);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 6);
-  $pdf->Write(10, "Receipt No: " . $receipt_number);
-  $pdf->SetFont('Helvetica', 'B', 8);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 10);
-  $pdf->Write(10, "Received from: ", '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetFont('Helvetica', 'B', 10);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 20);
-  $pdf->Write(10, strtoupper($displayname), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetFont('Helvetica', '', 10);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 24);
-  $pdf->Write(10, strtoupper($address_line_1), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 28);
-  $pdf->Write(10, strtoupper($address_line_2), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 32);
-  $pdf->Write(10, strtoupper($address_line_3), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->Write(10, 'Dear '. $displayname, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetFont('Helvetica', '', 8);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 14);
+  $pdf->Write(10, $address_line_1, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 18);
+  $pdf->Write(10, $address_line_2, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 22);
+  $pdf->Write(10, $address_line_3, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
 
   // If this is an in-kind donation
@@ -392,20 +403,17 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   else {
     $pdf->SetFont('Helvetica', 'B', 8);
     $pdf->SetY($mymargin_top + 72);
-    $pdf->Write(10, $line_1, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->Write(10, "Thank you for your generous donation to the Adoptive Families Association of BC.");
+    $pdf->SetY($mymargin_top + 76);
+    $pdf->Write(10, "Your contributions allow us to do what we do best: promote and support adoption");
+    $pdf->SetY($mymargin_top + 80);
+    $pdf->Write(10, "for children and teens to come home to loving adoptive families.");
+    $pdf->SetY($mymargin_top +84);
+    $pdf->Write(10, "Once again, we are deeply grateful for your support of adoption.");
+    $pdf->SetY($mymargin_top +  88);
     $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetY($mymargin_top + 76, 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-    $pdf->Write(10, 'Canadian Revenue Agency: www.cra-arc.gc.ca/charities');
+    $pdf->SetY($mymargin_top + 92, 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
-    // Bottom center section
-    $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetXY($mymargin_left + 92, $mymargin_top + 74);
-    if ( $issue_type != 'annual' ) {
-      $pdf->Write(10, 'Thank you!');
-    }
-    else {
-      $pdf->Write(10, ts("Thank you - %1!", array( 1 => $display_year)));
-    }
 
     // Bottom right section
     $signature = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_authorized_signature_text');
@@ -420,10 +428,72 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
     $pdf->SetXY($mymargin_left + 148 - $sig_offset, $mymargin_top + 76);
     $pdf->SetFont("Helvetica", "I", 7);
     $pdf->Write(10, $signature);
+    $pdf->SetXY($mymargin_left + 147 - $sig_offset, $mymargin_top + 80);
+    $pdf->Write(10, 'Executive Director');
   }
 
   // Line at the bottom
-  $pdf->Line($mymargin_left, $mymargin_top + 85, 198, $mymargin_top + 85, 'dash');
+  $pdf->Line($mymargin_left, $mymargin_top + 95, 198, $mymargin_top + 95, 'dash');
+  
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 75);
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->Write(10, $line_1);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 79);
+  civicrm_cdntaxreceipts_write_field($pdf, "Receipt Type:   ", CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_type'));
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 83);
+  civicrm_cdntaxreceipts_write_field($pdf,  "Date Donation Received:   ", $display_date);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 87);
+  civicrm_cdntaxreceipts_write_field($pdf,  "Receipt No:   ", $receipt_number);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 91);
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->Write(10, "Donated By:    ");
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 95);
+  civicrm_cdntaxreceipts_write_field($pdf,  "AFABC Id:   ", $pdf_variables['contact_id']);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 99);
+  $pdf->Write(10, $displayname, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetFont('Helvetica', '', 8);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 103);
+  $pdf->Write(10, $address_line_1, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 107);
+  $pdf->Write(10, $address_line_2, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 111);
+  $pdf->Write(10, $address_line_3, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 125);
+  civicrm_cdntaxreceipts_write_field($pdf, "Description:   ", 'Donation');
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 129);
+  civicrm_cdntaxreceipts_write_field($pdf, "Total Amount Received:   ", CRM_Utils_Money::format($pdf_variables['contribution']->total_amount));
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 133);
+  civicrm_cdntaxreceipts_write_field($pdf, "Value of Advantage:   ", CRM_Utils_Money::format($pdf_variables['contribution']->non_deductible_amount));
+  $eligible_amount = $pdf_variables['contribution']->total_amount - $pdf_variables['contribution']->non_deductible_amount;
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 137);
+  civicrm_cdntaxreceipts_write_field($pdf, "Eligible Amount For Tax Purposes:   ", CRM_Utils_Money::format($eligible_amount));
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 141);
+  civicrm_cdntaxreceipts_write_field($pdf, "Date of Receipt:   ",  $issued_on);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 145);
+  civicrm_cdntaxreceipts_write_field($pdf, "Location Issued:   ", "Burnaby, BC");
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 155);
+  civicrm_cdntaxreceipts_write_field($pdf, "Canada Revenue Agency:   ", "www.cra-arc.gc.ca/charities");
+
+  // Signature Section
+    if ( $signature == '' ) {
+      $signature = ts('Authorized Signature');
+    }
+    $sig_offset = strlen($signature) - 20;
+
+    $pdf->Image(CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_signature', NULL, $pdf_img_files_path . 'authorized-signature.png'), $mymargin_left + 137, $mymargin_top + 160, '', 15);
+    $pdf->Line($mymargin_left + 136, $mymargin_top + 172, $mymargin_left + 186, $mymargin_top + 172);
+    $pdf->SetXY($mymargin_left + 148 - $sig_offset, $mymargin_top + 169);
+    $pdf->SetFont("Helvetica", "I", 7);
+    $pdf->Write(10, $signature);
+    $pdf->SetXY($mymargin_left + 147 - $sig_offset, $mymargin_top + 173);
+    $pdf->Write(10, 'Executive Director');
+}
+
+function civicrm_cdntaxreceipts_write_field($pdf, $label, $value) {
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->Write(10, $label);
+  $pdf->SetFont('Helvetica', '', 8);
+  $pdf->Write(10, $value);
 }
 
 /**************************************

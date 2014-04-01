@@ -101,6 +101,15 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
   function processReceiptOptions($mode) {
     if ( $mode == 'build' ) {
       $this->add('text', 'receipt_prefix', ts('Receipt Prefix'));
+      $options = array( 
+        'CNA-Cash Gift No Advantage' =>'CNA-Cash Gift No Advantage', 
+        'CWA-Cash Gift With Advantage' => 'CWA-Cash Gift With Advantage',
+        'NCNA-Non Cash Gift No Advantage' => 'NCNA-Non Cash Gift No Advantage',
+        'NCWA-Non Cash Gift With Advantage' => 'NCWA-Non Cash Gift With Advantage',
+        'NR-No Receipt' => 'NR-No Receipt',
+        'COR-Correction' => 'COR-Correction',
+      );
+      $this->addRadio('receipt_type', ts( 'Tax Receipt Type' ), $options, NULL,  '<br/>', FALSE);
       $this->add('text', 'receipt_authorized_signature_text', ts('Authorized Signature Text'));
 
       $config = CRM_Core_Config::singleton( );
@@ -133,6 +142,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     else if ( $mode == 'defaults' ) {
       $defaults = array(
         'receipt_prefix' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_prefix'),
+        'receipt_type' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_type'),
         'receipt_authorized_signature_text' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_authorized_signature_text'),
       );
       return $defaults;
@@ -140,6 +150,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     else if ( $mode == 'post' ) {
       $values = $this->exportValues();
       CRM_Core_BAO_Setting::setItem($values['receipt_prefix'], self::SETTINGS, 'receipt_prefix');
+      CRM_Core_BAO_Setting::setItem($values['receipt_type'], self::SETTINGS, 'receipt_type');
       CRM_Core_BAO_Setting::setItem($values['receipt_authorized_signature_text'], self::SETTINGS, 'receipt_authorized_signature_text');
 
       $receipt_logo = $this->getSubmitValue('receipt_logo');
@@ -182,7 +193,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       $values = $this->exportValues();
       CRM_Core_BAO_Setting::setItem($values['enable_email'], self::SETTINGS, 'enable_email');
 
-      if ( $values['issue_inkind'] == 1 ) {
+      if ( isset($values['issue_inkind']) && $values['issue_inkind'] == 1 ) {
         cdntaxreceipts_configure_inkind_fields();
       }
     }
