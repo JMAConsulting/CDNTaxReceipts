@@ -197,6 +197,7 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
     "inkind_values" => isset($receipt['inkind_values']) ? $receipt['inkind_values'] : array(),
     "receipt_contributions" => $receipt['contributions'],
   );
+
   if ($receipt['issue_type'] != 'annual') {
     $contribution_id = $receipt['contributions'][0]['contribution_id'];
     $contribution = new CRM_Contribute_BAO_Contribution();
@@ -207,13 +208,16 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
     $params = array(
       'entityID' => $contribution_id,
       'custom_13' => 1,
+      'custom_62' => 1,
     );
     $result = CRM_Core_BAO_CustomValueTable::getValues($params);
     if ($result['is_error'] === 1) {
       $pdf_variables['receipt_type'] = '';
       $pdf_variables['description'] = '';
+      $pdf_variables['receipt_type'] = '';
     } else {
       $pdf_variables['description'] = $result['custom_13'];
+      $pdf_variables['receipt_type'] = $result['custom_62'];
     } 
     $pdf_variables['contribution'] = $contribution; 
   }
@@ -439,7 +443,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   $pdf->SetFont('Helvetica', 'B', 8);
   $pdf->Write(10, $line_1);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 79);
-  civicrm_cdntaxreceipts_write_field($pdf, "Receipt Type:   ", CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_type'));
+  civicrm_cdntaxreceipts_write_field($pdf, "Receipt Type:   ", $pdf_variables['receipt_type']);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 83);
   civicrm_cdntaxreceipts_write_field($pdf,  "Date Donation Received:   ", $display_date);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 87);
