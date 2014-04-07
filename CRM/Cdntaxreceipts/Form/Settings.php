@@ -101,15 +101,6 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
   function processReceiptOptions($mode) {
     if ( $mode == 'build' ) {
       $this->add('text', 'receipt_prefix', ts('Receipt Prefix'));
-      $options = array( 
-        'CNA-Cash Gift No Advantage' =>'CNA-Cash Gift No Advantage', 
-        'CWA-Cash Gift With Advantage' => 'CWA-Cash Gift With Advantage',
-        'NCNA-Non Cash Gift No Advantage' => 'NCNA-Non Cash Gift No Advantage',
-        'NCWA-Non Cash Gift With Advantage' => 'NCWA-Non Cash Gift With Advantage',
-        'NR-No Receipt' => 'NR-No Receipt',
-        'COR-Correction' => 'COR-Correction',
-      );
-      $this->addRadio('receipt_type', ts( 'Tax Receipt Type' ), $options, NULL,  '<br/>', FALSE);
       $this->add('text', 'receipt_authorized_signature_text', ts('Authorized Signature Text'));
 
       $config = CRM_Core_Config::singleton( );
@@ -142,7 +133,6 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     else if ( $mode == 'defaults' ) {
       $defaults = array(
         'receipt_prefix' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_prefix'),
-        'receipt_type' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_type'),
         'receipt_authorized_signature_text' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_authorized_signature_text'),
       );
       return $defaults;
@@ -150,7 +140,6 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     else if ( $mode == 'post' ) {
       $values = $this->exportValues();
       CRM_Core_BAO_Setting::setItem($values['receipt_prefix'], self::SETTINGS, 'receipt_prefix');
-      CRM_Core_BAO_Setting::setItem($values['receipt_type'], self::SETTINGS, 'receipt_type');
       CRM_Core_BAO_Setting::setItem($values['receipt_authorized_signature_text'], self::SETTINGS, 'receipt_authorized_signature_text');
 
       $receipt_logo = $this->getSubmitValue('receipt_logo');
@@ -161,10 +150,13 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       $config = CRM_Core_Config::singleton( );
       foreach ( array('receipt_logo', 'receipt_signature', 'receipt_watermark', 'receipt_pdftemplate') as $key ) {
         $upload_file = $this->getSubmitValue($key);
+        $ext = pathinfo($upload_file['name'], PATHINFO_EXTENSION);
         if (is_array($upload_file)) {
           if ( $upload_file['error'] == 0 ) {
             $filename = $config->customFileUploadDir . CRM_Utils_File::makeFileName($upload_file['name']);
-            move_uploaded_file($upload_file['tmp_name'], $filename);
+            if (!move_uploaded_file($upload_file['tmp_name'], $filename)) {
+              CRM_Core_Error::fatal(ts('Could not upload the file'));
+            }
             CRM_Core_BAO_Setting::setItem($filename, self::SETTINGS, $key);
           }
         }
