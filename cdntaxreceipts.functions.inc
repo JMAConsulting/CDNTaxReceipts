@@ -125,7 +125,7 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
 
   $address = cdntaxreceipts_getAddress($receipt['contact_id']);
 
-  $address_line_1 = isset($address['street_address']) ?_ $address['street_address'] : '';
+  $address_line_1 = isset($address['street_address']) ? $address['street_address'] : '';
   $parts = array();
   foreach(array('city', 'state_province', 'postal_code')  as $addr_part) {
     if (isset($address[$addr_part])) {
