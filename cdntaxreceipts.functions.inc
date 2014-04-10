@@ -310,7 +310,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   }
   $pdf->SetFont('Helvetica', 'I', 8);
   $pdf->SetY($mymargin_top + 16);
-  $pdf->Write(10, 'Email: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_email') . '; Website: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_web'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->Write(10, 'Website: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_web'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
   $pdf->SetY($mymargin_top + 20);
   $pdf->Write(10, 'Charitable Registration ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_charitable_no'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
   }
@@ -449,10 +449,9 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 87);
   civicrm_cdntaxreceipts_write_field($pdf,  "Receipt No:   ", $receipt_number);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 91);
-  $pdf->SetFont('Helvetica', 'B', 8);
-  $pdf->Write(10, "Donated By:    ");
+  civicrm_cdntaxreceipts_write_field($pdf,  "Donated by:   ", $displayname);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 95);
-  civicrm_cdntaxreceipts_write_field($pdf,  "AFABC Id:   ", $pdf_variables['contact_id']);
+  civicrm_cdntaxreceipts_write_field($pdf,  "AFABC ID:   ", $pdf_variables['contact_id']);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 99);
   $pdf->Write(10, $displayname, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
   $pdf->SetFont('Helvetica', '', 8);
@@ -463,14 +462,14 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 111);
   $pdf->Write(10, $address_line_3, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 125);
-  civicrm_cdntaxreceipts_write_field($pdf, "Description:   ", 'Donation');
+  civicrm_cdntaxreceipts_write_field($pdf, "Description:   ", $pdf_variables['description']);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 129);
   civicrm_cdntaxreceipts_write_field($pdf, "Total Amount Received:   ", CRM_Utils_Money::format($pdf_variables['contribution']->total_amount));
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 133);
   civicrm_cdntaxreceipts_write_field($pdf, "Value of Advantage:   ", CRM_Utils_Money::format($pdf_variables['contribution']->non_deductible_amount));
   $eligible_amount = $pdf_variables['contribution']->total_amount - $pdf_variables['contribution']->non_deductible_amount;
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 137);
-  civicrm_cdntaxreceipts_write_field($pdf, "Eligible Amount For Tax Purposes:   ", CRM_Utils_Money::format($eligible_amount));
+  civicrm_cdntaxreceipts_write_field($pdf, "Eligible Amount For Tax Purposes:     ", CRM_Utils_Money::format($eligible_amount));
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 141);
   civicrm_cdntaxreceipts_write_field($pdf, "Date of Receipt:   ",  $issued_on);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 145);
