@@ -235,15 +235,9 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
       cdntaxreceipts_createPDF($f, $pdf_variables);
     }
     elseif (! $receipt['is_duplicate']) {
-      // print original AND duplicate copy
+      // print only original AFABC - 49
       $pdf_variables["mymargin_top"] = $mymargin_top;
       $pdf_variables["is_duplicate"] = FALSE;
-      cdntaxreceipts_createPDF($f, $pdf_variables);
-      $pdf_variables["mymargin_top"] = $mymargin_top + 180;
-      $pdf_variables["is_duplicate"] = TRUE;
-      cdntaxreceipts_createPDF($f, $pdf_variables);
-      $pdf_variables["mymargin_top"] = $mymargin_top + 180*2;
-      $pdf_variables["is_duplicate"] = TRUE;
       cdntaxreceipts_createPDF($f, $pdf_variables);
     }
   }
