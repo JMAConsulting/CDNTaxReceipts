@@ -690,9 +690,6 @@ function cdntaxreceipts_eligibleForReceipt( $contributionId ) {
     CRM_Core_Error::fatal( "CDNTaxReceipts: Could not retrieve details for this contribution" );
   }
 
-  // 1. check that contribution amount is deductible
-  $deductibleAmount = $contribution->total_amount - $contribution->non_deductible_amount;
-
   // 2. check if the contribution is of a Type that is indeed Tax receiptable.
   $contributionType =  _cdntaxreceipts_get_type_for_contribution($contribution);
 
@@ -717,7 +714,7 @@ function cdntaxreceipts_eligibleForReceipt( $contributionId ) {
     }
   }
 
-  if ( $contributionType->is_deductible && $contributionStatus == '1' && $contribution->is_test == 0 && $deductibleAmount > 0 && $hookOk ) {
+  if ( $contributionType->is_deductible && $contributionStatus == '1' && $contribution->is_test == 0 && $hookOk ) {
     return TRUE;
   }
   else {
