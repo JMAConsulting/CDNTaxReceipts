@@ -196,7 +196,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       $this->add('text', 'email_subject', ts('Email Subject'));
       $this->add('text', 'email_from', ts('Email From'));
       $this->add('text', 'email_archive', ts('Archive Email'));
-      $this->add('text', 'email_cc', ts('CC Email'));
+      $this->add('text', 'email_cc', ts('BCC Email'));
       $this->addElement('textarea', 'email_message', ts('Email Message'));
 
       $this->addRule('email_subject', 'Enter email subject', 'required');
