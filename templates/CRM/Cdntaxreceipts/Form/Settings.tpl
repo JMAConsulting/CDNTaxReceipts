@@ -137,6 +137,11 @@
           <p class="description">Address you would like to Send a copy of the Email containing the Tax Receipt to. This is useful to create an archive.</p></td>
       </tr>
       <tr>
+        <td class="label">{$form.email_cc.label}</td>
+        <td class="content">{$form.email_cc.html}
+          <p class="description">Address you would like to Send a copy of the Email containing the Tax Receipt to.</p></td>
+      </tr>
+      <tr>
         <td class="label">{$form.email_message.label}</td>
         <td class="content">{$form.email_message.html}
           <p class="description">Text in the Email to accompany your Tax Receipt.</p></td>
