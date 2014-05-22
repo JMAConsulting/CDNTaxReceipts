@@ -195,6 +195,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       $this->add('text', 'email_subject', ts('Email Subject'));
       $this->add('text', 'email_from', ts('Email From'));
       $this->add('text', 'email_archive', ts('Archive Email'));
+      $this->add('text', 'email_cc', ts('CC Email'));
       $this->addElement('textarea', 'email_message', ts('Email Message'));
 
       $this->addRule('email_subject', 'Enter email subject', 'required');
@@ -209,6 +210,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
         'email_subject' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'email_subject', NULL, $subject),
         'email_from' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'email_from'),
         'email_archive' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'email_archive'),
+        'email_cc' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'email_cc'),
         'email_message' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'email_message', NULL, $message),
       );
       return $defaults;
@@ -218,6 +220,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       CRM_Core_BAO_Setting::setItem($values['email_subject'], self::SETTINGS, 'email_subject');
       CRM_Core_BAO_Setting::setItem($values['email_from'], self::SETTINGS, 'email_from');
       CRM_Core_BAO_Setting::setItem($values['email_archive'], self::SETTINGS, 'email_archive');
+      CRM_Core_BAO_Setting::setItem($values['email_cc'], self::SETTINGS, 'email_cc');
       CRM_Core_BAO_Setting::setItem($values['email_message'], self::SETTINGS, 'email_message');
     }
   }

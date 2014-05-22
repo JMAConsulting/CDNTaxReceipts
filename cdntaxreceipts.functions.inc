@@ -67,6 +67,8 @@ function cdntaxreceipts_processTaxReceipt( $receipt, &$collectedPdf = NULL, $pre
   $email_from = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'email_from');
   $email_archive = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'email_archive');
 
+  $email_cc = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'email_cc');
+
   $mailparams = array(
     'from' => $org_name . ' <' . $email_from . '> ',
     'toName' => $displayname,
@@ -84,6 +86,16 @@ function cdntaxreceipts_processTaxReceipt( $receipt, &$collectedPdf = NULL, $pre
   }
   else {
     $mailparams['toEmail'] = $email_archive;
+  }
+  
+  // Add BCC email in both cases
+  if ($email_cc) {
+    if (!empty($mailparams['bcc'])) {
+      $mailparams['bcc'] = $mailparams['bcc'].','.$email_cc;
+    }
+    else {
+      $mailparams['bcc'] = $email_cc;
+    }
   }
 
   if ( $previewMode ) {
