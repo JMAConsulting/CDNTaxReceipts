@@ -68,6 +68,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       $this->addRule('org_charitable_no', 'Enter Charitable Number', 'required');
     }
     else if ( $mode == 'defaults' ) {
+      CRM_Utils_System::flushCache();
       $defaults = array(
         'org_name' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_name'),
         'org_address_line1' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_address_line1'),
@@ -142,15 +143,9 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       CRM_Core_BAO_Setting::setItem($values['receipt_prefix'], self::SETTINGS, 'receipt_prefix');
       CRM_Core_BAO_Setting::setItem($values['receipt_authorized_signature_text'], self::SETTINGS, 'receipt_authorized_signature_text');
 
-      $receipt_logo = $this->getSubmitValue('receipt_logo');
-      $receipt_signature = $this->getSubmitValue('receipt_signature');
-      $receipt_watermark = $this->getSubmitValue('receipt_watermark');
-      $receipt_pdftemplate = $this->getSubmitValue('receipt_pdftemplate');
-
       $config = CRM_Core_Config::singleton( );
       foreach ( array('receipt_logo', 'receipt_signature', 'receipt_watermark', 'receipt_pdftemplate') as $key ) {
         $upload_file = $this->getSubmitValue($key);
-        $ext = pathinfo($upload_file['name'], PATHINFO_EXTENSION);
         if (is_array($upload_file)) {
           if ( $upload_file['error'] == 0 ) {
             $filename = $config->customFileUploadDir . CRM_Utils_File::makeFileName($upload_file['name']);
