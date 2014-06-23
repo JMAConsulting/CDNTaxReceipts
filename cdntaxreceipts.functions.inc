@@ -152,7 +152,7 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
     $display_date = date('M j, Y', mktime(0,0,0,1,1,$receipt['receive_date'])) . ' - ' . date('M j, Y', mktime(0,0,0,12,31,$receipt['receive_date']));
   }
 
-  $line_1 = "This is your Official Receipt for income tax purposes.";
+  $line_1 = "Charitable Registration #/ NO d’enregistrement d’organisme de bienfaisance: " . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_charitable_no');
 
   $config = CRM_Core_Config::singleton();
   $pdf_file = $config->customFileUploadDir . 'Receipt-' . $receipt['receipt_no'] . '.pdf';
@@ -214,12 +214,12 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
       $pdf_variables["mymargin_top"] = $mymargin_top;
       $pdf_variables["is_duplicate"] = FALSE;
       cdntaxreceipts_createPDF($f, $pdf_variables);
-      $pdf_variables["mymargin_top"] = $mymargin_top + 90;
-      $pdf_variables["is_duplicate"] = TRUE;
-      cdntaxreceipts_createPDF($f, $pdf_variables);
-      $pdf_variables["mymargin_top"] = $mymargin_top + 90*2;
-      $pdf_variables["is_duplicate"] = TRUE;
-      cdntaxreceipts_createPDF($f, $pdf_variables);
+      /* $pdf_variables["mymargin_top"] = $mymargin_top + 90; */
+      /* $pdf_variables["is_duplicate"] = TRUE; */
+      /* cdntaxreceipts_createPDF($f, $pdf_variables); */
+      /* $pdf_variables["mymargin_top"] = $mymargin_top + 90*2; */
+      /* $pdf_variables["is_duplicate"] = TRUE; */
+      /* cdntaxreceipts_createPDF($f, $pdf_variables); */
     }
   }
 
@@ -265,7 +265,11 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   if (!empty($pdf_template_file)) {
   }
   else {
-    $pdf->Image(CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_logo', NULL, $pdf_img_files_path . 'your-logo.png'), $mymargin_left, $mymargin_top, '', 30);
+    // MNC-44 - Change according to site
+    $logo = '/home/edsel/public_html/staging.melanomanetwork.ca/wp-content/themes/theme1715/images/logo.png';
+    $pdf->Image($logo, $mymargin_left, $mymargin_top, '', 25);
+    $logo = '/home/edsel/public_html/staging.melanomanetwork.ca/fr/wp-content/themes/theme1715/images/logo.png';
+    $pdf->Image($logo, $mymargin_left + 45, $mymargin_top, '', 25);
 
   // Top right section
   $pdf->SetFont('Helvetica', '', 8);
@@ -284,13 +288,13 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   }
   $pdf->SetFont('Helvetica', 'I', 8);
   $pdf->SetY($mymargin_top + 16);
-  $pdf->Write(10, 'Email: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_email') . '; Website: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_web'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetY($mymargin_top + 20);
-  $pdf->Write(10, 'Charitable Registration ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_charitable_no'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->Write(10, 'Website: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_web'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+  //$pdf->SetY($mymargin_top + 20);
+  //$pdf->Write(10, 'Charitable Registration ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_charitable_no'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
   }
 
   // Right section
-  $x_detailscolumn = 120;
+  $x_detailscolumn = 115;
   $y_detailscolumnstart = 22;
   $pdf_template_file = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_pdftemplate');
   if (!empty($pdf_template_file)) {
@@ -301,11 +305,11 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   }
   $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 6);
   $pdf->SetFont('Helvetica', 'B', 8);
-  $pdf->Write(10, "Issue Date: " . $issued_on);
+  $pdf->Write(10, "Date Issued on / Date d’émission: " . $issued_on);
   $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 12);
-  $pdf->Write(10, "Received on: " . $display_date);
+  $pdf->Write(10, "Gift Date / Date du don: " . $display_date);
   $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 18);
-  $pdf->Write(10, "Eligible Amount:  $" . number_format($amount, 2));
+  $pdf->Write(10, "Eligible Amount / Montant admissible du don:  $" . number_format($amount, 2));
   $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
 
   if ($issue_type == 'annual') {
@@ -332,20 +336,24 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   // Left section
   $pdf->SetFont('Helvetica', 'B', 8);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 6);
-  $pdf->Write(10, "Receipt No: " . $receipt_number);
-  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->Write(10, "OFFICIAL RECEIPT FOR TAX PURPOSES");
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 10);
+  $pdf->Write(10, "REÇU OFFICIEL POUR FIN D'IMPÔT");  
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 15);
+  $pdf->Write(10, "Receipt No / Numéro de reçu: " . $receipt_number);
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 20);
   $pdf->Write(10, "Received from: ", '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetFont('Helvetica', 'B', 10);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 20);
-  $pdf->Write(10, strtoupper($displayname), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetFont('Helvetica', '', 10);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 24);
-  $pdf->Write(10, strtoupper($address_line_1), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 28);
-  $pdf->Write(10, strtoupper($address_line_2), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 32);
-  $pdf->Write(10, strtoupper($address_line_3), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 25);
+  $pdf->Write(10, $displayname, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetFont('Helvetica', '', 8);
+  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 31);
+  $pdf->Write(10, $address_line_1, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 35);
+  $pdf->Write(10, $address_line_2, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 39);
+  $pdf->Write(10, $address_line_3, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
 
   // If this is an in-kind donation
@@ -369,7 +377,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
 
     $appraiser = $inkind_values[1] . ' - '. $inkind_values[2];
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 24);
+    $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
 
     if (strlen($appraiser) < 36) {
       $pdf->Write(10, "Appraiser: " . $appraiser);
@@ -390,18 +398,21 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   if (!empty($pdf_template_file)) {
   }
   else {
-    $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetY($mymargin_top + 72);
+    $pdf->SetFont('Helvetica', '', 6);
+    $pdf->SetY($mymargin_top + 82);
     $pdf->Write(10, $line_1, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-    $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetY($mymargin_top + 76, 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-    $pdf->Write(10, 'Canadian Revenue Agency: www.cra-arc.gc.ca/charities');
+    $pdf->SetY($mymargin_top + 84, 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->Write(10, 'For more information, visit the Canada Revenue Agency website: http://www.cra-arc.gc.ca/charities'); 
+    $pdf->SetY($mymargin_top + 86);
+    $pdf->Write(10, 'Pour des informations supplémentaires, visitez le site web de l\'Agence du revenu du Canada au: http://www.cra-arc.gc.ca/bienfaisance');
 
     // Bottom center section
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetXY($mymargin_left + 92, $mymargin_top + 74);
+    $pdf->SetXY($mymargin_left + 85, $mymargin_top + 74);
     if ( $issue_type != 'annual' ) {
-      $pdf->Write(10, 'Thank you!');
+      $pdf->Write(10, 'Thank you for your gift');
+      $pdf->SetXY($mymargin_left + 85, $mymargin_top + 78);
+      $pdf->Write(10, 'Merci de votre générosité');
     }
     else {
       $pdf->Write(10, ts("Thank you - %1!", array( 1 => $display_year)));
@@ -410,7 +421,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
     // Bottom right section
     $signature = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_authorized_signature_text');
     if ( $signature == '' ) {
-      $signature = ts('Authorized Signature');
+      $signature = ts('Authorized Signature autorisée');
     }
     $sig_offset = strlen($signature) - 20;
     $pdf_template_file = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_pdftemplate');
@@ -423,7 +434,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   }
 
   // Line at the bottom
-  $pdf->Line($mymargin_left, $mymargin_top + 85, 198, $mymargin_top + 85, 'dash');
+  $pdf->Line($mymargin_left, $mymargin_top + 95, 198, $mymargin_top + 95, 'dash');
 }
 
 /**************************************
