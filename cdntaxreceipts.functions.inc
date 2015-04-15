@@ -23,6 +23,9 @@ require_once('FPDI/fpdi.php');
         }
         $this->useTemplate($this->_tplIdx);
       }
+      else {
+        $this->parsers = array();
+      }
     }
 
     function Footer() {}
@@ -42,10 +45,9 @@ require_once('FPDI/fpdi.php');
  *
  * This method is common to both single and annual receipts.
  */
-function cdntaxreceipts_processTaxReceipt( $receipt, &$collectedPdf = NULL, $previewMode = FALSE ) {
+function cdntaxreceipts_processTaxReceipt( $receipt, &$collectedPdf = NULL, $previewMode = FALSE, $method = NULL ) {
 
-  // determine the send method
-  require_once('CRM/Contact/BAO/Contact.php');
+  // Get contact details
   list($displayname, $email) = CRM_Contact_BAO_Contact::getContactDetails($receipt['contact_id']);
 
   // generate the PDF file
@@ -144,6 +146,7 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
       $parts[] = $address[$addr_part];
     }
   }
+  $address_line_1b = isset($address['supplemental_address_1']) ? $address['supplemental_address_1'] : '';
   $address_line_2 = implode(' ', $parts);
   $address_line_3 = isset($address['country']) ? $address['country'] : '';
 
@@ -204,6 +207,7 @@ function cdntaxreceipts_generateFormattedReceipt( $receipt, &$collectedPdf = NUL
     "receipt_number" => $receipt['receipt_no'],
     "displayname" => $displayname,
     "address_line_1" => $address_line_1,
+    "address_line_1b" => $address_line_1b,
     "address_line_2" => $address_line_2,
     "address_line_3" => $address_line_3,
     "inkind_values" => isset($receipt['inkind_values']) ? $receipt['inkind_values'] : array(),
@@ -277,6 +281,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   $receipt_number = $pdf_variables["receipt_number"];
   $displayname = $pdf_variables["displayname"];
   $address_line_1 = $pdf_variables["address_line_1"];
+  $address_line_1b = $pdf_variables["address_line_1b"];
   $address_line_2 = $pdf_variables["address_line_2"];
   $address_line_3 = $pdf_variables["address_line_3"];
   $inkind_values = $pdf_variables["inkind_values"];
@@ -329,7 +334,7 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   }
   else {
     $background_image = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_watermark');
-    if ( $background_image ) $pdf->Image(CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_watermark'), $mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart, '', 50);
+    if ( $background_image ) $pdf->Image(CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_watermark'), $mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 6, '', 40);
   }
 
   if ($issue_type == 'annual') {
@@ -348,7 +353,9 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
     $source_funds_lastbit = array_pop($source_funds_words);
     $pdf->Write(10, "Source: " . implode(" ", $source_funds_words));
     $source_funds_count = count($source_funds_words);
-    $source_funds_nextline = array_splice(explode(" ", $source_funds), $source_funds_count);
+    // $source_funds_nextline = array_splice(explode(" ", $source_funds), $source_funds_count);
+    $exploded = explode(" ", $source_funds);
+    $source_funds_nextline = array_splice($exploded, $source_funds_count);
     $pdf->SetXY($mymargin_left + $x_detailscolumn + 16, $mymargin_top + $y_detailscolumnstart + 38);
     $pdf->Write(10, implode(" ", $source_funds_nextline));
   }
@@ -368,6 +375,26 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 22);
   $pdf->Write(10, $address_line_3, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
+  if (!$address_line_1b){
+    $pdf->SetFont('Helvetica', '', 10);
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 24);
+    $pdf->Write(10, strtoupper($address_line_1), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 28);
+    $pdf->Write(10, strtoupper($address_line_2), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 32);
+    $pdf->Write(10, strtoupper($address_line_3), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  }
+  else {
+    $pdf->SetFont('Helvetica', '', 10);
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 24);
+    $pdf->Write(10, strtoupper($address_line_1), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 28);
+    $pdf->Write(10, strtoupper($address_line_1b), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 32);
+    $pdf->Write(10, strtoupper($address_line_2), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 36);
+    $pdf->Write(10, strtoupper($address_line_3), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+  }
 
   // If this is an in-kind donation
   if ( !empty($inkind_values) ) {
@@ -424,11 +451,10 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
     $pdf->SetFont('Helvetica', '', 8);
     $pdf->SetY($mymargin_top + 92, 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
-
     // Bottom right section
     $signature = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_authorized_signature_text');
     if ( $signature == '' ) {
-      $signature = ts('Authorized Signature');
+      $signature = ts('Authorized Signature', array('domain' => 'org.civicrm.cdntaxreceipts'));
     }
     $sig_offset = strlen($signature) - 20;
     $pdf_template_file = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_pdftemplate');
@@ -618,6 +644,13 @@ function cdntaxreceipts_issueTaxReceipt( $contribution, &$collectedPdf = NULL, $
       $year = substr($receipt['contributions'][0]['receive_date'], 0, 4);
       return cdntaxreceipts_issueAnnualTaxReceipt($contactId, $year, $collectedPdf, $previewMode);
     }
+    else if ( $receipt['issue_type'] == 'aggregate' ) {
+      $contactId = $receipt['contact_id'];
+      $year = substr($receipt['contributions'][0]['receive_date'], 0, 4);
+      list($method, $email) = cdntaxreceipts_sendMethodForContact($contactId);
+      return cdntaxreceipts_issueAggregateTaxReceipt($contactId, $year, $receipt['contributions'],
+        $method, $collectedPdf, $previewMode);
+    }
   }
 
   // determine the send method
@@ -672,7 +705,7 @@ function cdntaxreceipts_issueTaxReceipt( $contribution, &$collectedPdf = NULL, $
     'receipt_no' => $receipt_no,
     'issued_on' =>  (int) $_SERVER['REQUEST_TIME'],
     'contact_id' => $contribution->contact_id,
-    'receipt_amount' => $contribution->total_amount - $contribution->non_deductible_amount,
+    'receipt_amount' => cdntaxreceipts_eligibleAmount($contribution->id),
     'is_duplicate' => $is_duplicate,
     'issue_type' => 'single',
     'issue_method' => $method,
@@ -694,6 +727,18 @@ function cdntaxreceipts_issueTaxReceipt( $contribution, &$collectedPdf = NULL, $
 }
 
 function cdntaxreceipts_eligibleForReceipt( $contributionId ) {
+
+  // This function may be called multiple times throughout a request lifecycle, for the
+  // same contribution. This can be resource intensive, since it must load the Contribution
+  // object each time and will invoke any custom hooks, which may themselves hit the DB. This
+  // adds up quickly, particularly during bulk runs. The basic eligibility of a
+  // contribution will not change through the request lifecycle, so we can cache those we
+  // have already computed.
+  static $cache = array();
+  if ( array_key_exists($contributionId, $cache) ) {
+    return $cache[$contributionId];
+  }
+  
   require_once('CRM/Contribute/DAO/Contribution.php');
   $contribution =  new CRM_Contribute_DAO_Contribution();
   $contribution->id = $contributionId;
@@ -715,7 +760,11 @@ function cdntaxreceipts_eligibleForReceipt( $contributionId ) {
   //   module implementations should return an array containing a single item,
   //   either TRUE or FALSE. assumes TRUE until we receive a FALSE. one FALSE
   //   disqualifies the contribution for a tax receipt.
-  $results = CRM_Utils_Hook::singleton()->invoke(1, $contribution, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, 'cdntaxreceipts_eligible');
+  if (version_compare(CRM_Utils_System::version(), '4.5', '<')) {
+    $results = CRM_Utils_Hook::singleton()->invoke(1, $contribution, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, 'cdntaxreceipts_eligible');
+  } else {
+    $results = CRM_Utils_Hook::singleton()->invoke(1, $contribution, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, 'cdntaxreceipts_eligible');
+  }
   $hookOk = TRUE;
 
   if (is_array($results)) {
@@ -727,12 +776,57 @@ function cdntaxreceipts_eligibleForReceipt( $contributionId ) {
   }
 
   if ( $contributionType->is_deductible && $contributionStatus == '1' && $contribution->is_test == 0 && $hookOk ) {
-    return TRUE;
+    $cache[$contributionId] = TRUE;
   }
   else {
-    return FALSE;
+    $cache[$contributionId] = FALSE;
   }
 
+  return $cache[$contributionId];
+
+}
+
+function cdntaxreceipts_eligibleAmount( $contributionId ) {
+
+  // This function may be called multiple times throughout a request lifecycle, for the
+  // same contribution. This can be resource intensive, since it must load the Contribution
+  // object each time and will invoke any custom hooks, which may themselves hit the DB. This
+  // adds up quickly, particularly during bulk runs. The basic eligibility amount of a
+  // contribution will not change through the request lifecycle, so we can cache those we
+  // have already computed.
+  static $cache = array();
+  if ( array_key_exists($contributionId, $cache) ) {
+    return $cache[$contributionId];
+  }
+  
+  require_once('CRM/Contribute/DAO/Contribution.php');
+  $contribution =  new CRM_Contribute_DAO_Contribution();
+  $contribution->id = $contributionId;
+
+  if ( ! $contribution->find( TRUE ) ) {
+    CRM_Core_Error::fatal( "CDNTaxReceipts: Could not retrieve details for this contribution" );
+  }
+
+  // 1. calculate deductible amount
+  $deductibleAmount = $contribution->total_amount - $contribution->non_deductible_amount;
+ 
+  // 2. allow modules to alter the amount. lowest amount wins.
+   if (version_compare(CRM_Utils_System::version(), '4.5', '<')) {
+    $results = CRM_Utils_Hook::singleton()->invoke(1, $contribution, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, 'cdntaxreceipts_eligibleAmount');
+  } else {
+    $results = CRM_Utils_Hook::singleton()->invoke(1, $contribution, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, 'cdntaxreceipts_eligibleAmount');
+  }
+
+  if (is_array($results)) {
+    foreach ( $results as $result ) {
+      if ( $result < $deductibleAmount ) {
+        $deductibleAmount = $result;
+      }
+    }
+  }
+
+  $cache[$contributionId] = $deductibleAmount;
+  return $deductibleAmount;
 }
 
 /**
@@ -774,13 +868,14 @@ function cdntaxreceipts_issueAnnualTaxReceipt( $contactId, $year, &$collectedPdf
     $receiptContributions = array();
     $totalReceipt = 0;
     foreach ( $contributions as $c ) {
+      $eligibleAmount = cdntaxreceipts_eligibleAmount($c['contribution_id']);
       $receiptContributions[] = array(
         'contribution_id' => $c['contribution_id'],
         'contribution_amount' => $c['total_amount'],
-        'receipt_amount' => $c['total_amount'] - $c['non_deductible_amount'],
+        'receipt_amount' => $eligibleAmount,
         'receive_date' => $c['receive_date'],
       );
-      $totalReceipt += $c['total_amount'] - $c['non_deductible_amount'];
+      $totalReceipt += $eligibleAmount;
     }
 
     // generate a receipt number
@@ -803,6 +898,100 @@ function cdntaxreceipts_issueAnnualTaxReceipt( $contactId, $year, &$collectedPdf
   return cdntaxreceipts_processTaxReceipt($receipt, $collectedPdf, $previewMode);
 }
 
+/**
+ * cdntaxreceipts_issueAggregateTaxReceipt()
+ * Issues an grouped tax receipt for a given contact, year and list of selected contributions.
+ * Currently does not issue duplicates. Pass only original contribution ids.
+ *
+ * @param $contactId
+ * @param $year
+ * @param $contributions
+ * @param $method
+ * @param null $collectedPdf
+ * @param bool $previewMode
+ * @return array
+ */
+function cdntaxreceipts_issueAggregateTaxReceipt($contactId, $year, $contributions, $method, &$collectedPdf = NULL,
+                                                 $previewMode = FALSE ) {
+  if ( count($contributions) == 0 ) {
+    return array(FALSE, $method, NULL);
+  }
+
+  /* Two different formats come into this function in the $contributions array
+   * 1. When issuing for the first time:
+   * array ($contribution_id => array(
+   *   'contribution_id' => $id,
+   *   'contact_id' => $dao->contact_id,
+   *   'total_amount' => $dao->total_amount,
+   *   'non_deductible_amount' => $dao->non_deductible_amount,
+   *   'receive_date' => $dao->receive_date,
+   *   'receive_year' => $dao->receive_year,
+   *   'eligible' => $eligible,
+   *   'receipt_id' => $dao->receipt_id,
+   * ),);
+   * 2. When re-issuing:
+   *
+   *  $index (not contrib id) => array(
+   *    'contribution_id'
+   *    'contribution_amount'
+   *    'receipt_amount'
+   *    'receive_date'
+   * );
+   * */
+
+  $contrib_copy = $contributions;
+  $check_contribution = array_shift($contrib_copy);
+  list($issued_on, $receipt_id) = cdntaxreceipts_issued_on($check_contribution['contribution_id']);
+
+  if (isset($check_contribution['receipt_id']) && $check_contribution['receipt_id'] != 0) {
+    $is_duplicate = TRUE;
+  }
+  else {
+    $is_duplicate = empty($issued_on) ? 0 : 1;
+  }
+
+  if ( $is_duplicate ) {
+    $receipt = cdntaxreceipts_load_receipt($receipt_id);
+    $receipt['issued_on'] = (int) $_SERVER['REQUEST_TIME'];
+    $receipt['is_duplicate'] = 1;
+    $receipt['issue_method'] = $method;
+    $receipt['receive_date'] = $year;
+  }
+  else {
+    // calculate total amount
+    $receiptContributions = array();
+    $totalReceipt = 0;
+    foreach ( $contributions as $c ) {
+      $eligibleAmount =  cdntaxreceipts_eligibleAmount($c['contribution_id']);
+      $receiptContributions[] = array(
+        'contribution_id' => $c['contribution_id'],
+        'contribution_amount' => $c['total_amount'],
+        'receipt_amount' => $eligibleAmount,
+        'receive_date' => $c['receive_date'],
+      );
+      $totalReceipt += $eligibleAmount;
+    }
+
+    // generate a receipt number
+    $receiptNo = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_prefix') . str_pad($receiptContributions[0]['contribution_id'], 8, 0, STR_PAD_LEFT);
+
+    $receipt = array(
+      'receipt_no' => $receiptNo,
+      'issued_on' =>  (int) $_SERVER['REQUEST_TIME'],
+      'contact_id' => $contactId,
+      'receipt_amount' => $totalReceipt,
+      'is_duplicate' => 0,
+      'issue_type' => 'aggregate',
+      'issue_method' => $method,
+      'receive_date' => $year,
+      'contributions' => $receiptContributions,
+    );
+  }
+
+  return cdntaxreceipts_processTaxReceipt($receipt, $collectedPdf, $previewMode);
+}
+
+
 /* determines the send method for the specified contact
  * returns array, [0] = 'email' or 'print', [1] = email address or NULL
  */
@@ -813,16 +1002,37 @@ function cdntaxreceipts_sendMethodForContact( $contactId ) {
     return array('print', NULL);
   }
 
+  $method = array('print', NULL);
+  
   require_once 'CRM/Contact/BAO/Contact.php';
   list($displayname, $email, $doNotEmail, $onHold) = CRM_Contact_BAO_Contact::getContactDetails($contactId);
 
   if ( isset($email) ) {
     if ( ! $doNotEmail && ! $onHold ) {
-      return array('email', $email);
+      $method = array('email', $email);
+    }
+  }
+  
+  // invoke hook_cdntaxreceipts_method:
+  //   module implementations should return an array containing a single item,
+  //   either 'email' or 'print'. if we receive one or more 'print', the contact
+  //   is disqualified from receiving email receipts. 
+  if (version_compare(CRM_Utils_System::version(), '4.5', '<')) {
+    $results = CRM_Utils_Hook::singleton()->invoke(1, $contactId, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, 'cdntaxreceipts_method');
+  } else {
+    $results = CRM_Utils_Hook::singleton()->invoke(1, $contactId, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, CRM_Utils_Hook::$_nullObject, 'cdntaxreceipts_method');
+  }
+  $emailOk = TRUE;
+
+  if (is_array($results)) {
+    foreach ( $results as $result ) {
+      if ( $result == 'print' ) {
+        $method = array('print', NULL);
+      }
     }
   }
 
-  return array('print', NULL);
+  return $method;
 
 }
 
@@ -961,4 +1171,21 @@ function cdntaxreceipts_getAddress($contact_id) {
   CRM_Core_BAO_Address::fixAddress($address);
 
   return $address;
+}
+
+/**
+ * @param $issue_type
+ * @return string display formatted Issue type
+ */
+function _cdntaxreceipts_get_display_type($issue_type) {
+  switch ($issue_type) {
+    case 'aggregate' :
+      return 'Aggregate';
+    case 'annual' :
+      return 'Annual';
+    case 'single' :
+      return 'Single';
+    default:
+      return '';
+  }
 }

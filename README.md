@@ -66,6 +66,10 @@ The extension also enables two report templates, which can be used to see a list
 - Tax Receipts - Receipts Issued
 - Tax Receipts - Receipts Not Issued
 
+**Testing Tax Receipts**
+
+- To test your template settings and view a receipt without e-mailing the contact or making a database record, follow the directions for bulk-issueing of receipts: go to Contributions > Find Contributions, run a search, select a search result, and select "Issue Tax Receipts" in the actions drop-down. On the next screen, make sure to select 'Run in preview mode?', and follow on-screen instructions for other options, a pdf will be generated.
+
 
 hook_cdntaxreceipts_eligible()
 ------------
@@ -96,6 +100,22 @@ You may be in a situation where certain Contributions are eligible for tax recei
     }
 
 By default, a contribution is eligible for tax receipting if it is completed, and if its Financial Type is deductible.
+
+hook_cdntaxreceipts_eligibleAmount()
+------------
+
+If you need to customize the amount that is tax-deductible on a receipt, use this hook.
+
+    // Example hook implementation:
+    //  Return a maximum tax deduction of $1000.00
+    function mymodule_cdntaxreceipts_eligibleAmount( $contribution ) {
+      if ($contribution->total_amount - $contribution->non_deductible_amount > 1000) {
+        return array(1000.00);
+      }
+      else {
+        return $contribution->total_amount - $contribution->non_deductible_amount;
+      }
+    }
 
 Disclaimer
 ------------
