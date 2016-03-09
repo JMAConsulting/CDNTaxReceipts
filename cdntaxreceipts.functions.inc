@@ -283,26 +283,26 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   else {
     $pdf->Image(CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'receipt_logo', NULL, $pdf_img_files_path . 'your-logo.png'), $mymargin_left, $mymargin_top, '', 30);
 
-  // Top right section
-  $pdf->SetFont('Helvetica', '', 8);
-  $pdf->SetY($mymargin_top);
-  $pdf->Write(10, CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_name'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetY($mymargin_top + 4);
-  $pdf->Write(10, CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_address_line1'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetY($mymargin_top + 8);
-  $pdf->Write(10, CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_address_line2'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetY($mymargin_top + 12);
-  if ( CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_fax' ) == '' ) {
-    $pdf->Write(10, 'Tel: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_tel'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
-  }
-  else {
-    $pdf->Write(10, 'Tel: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_tel') . '; Fax: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_fax'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
-  }
-  $pdf->SetFont('Helvetica', 'I', 8);
-  $pdf->SetY($mymargin_top + 16);
-  $pdf->Write(10, 'Email: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_email') . '; Website: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_web'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetY($mymargin_top + 20);
-  $pdf->Write(10, 'Charitable Registration ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_charitable_no'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+    // Top right section
+    $pdf->SetFont('Helvetica', '', 8);
+    $pdf->SetY($mymargin_top);
+    $pdf->Write(10, CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_name'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetY($mymargin_top + 4);
+    $pdf->Write(10, CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_address_line1'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetY($mymargin_top + 8);
+    $pdf->Write(10, CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_address_line2'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetY($mymargin_top + 12);
+    if ( CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_fax' ) == '' ) {
+      $pdf->Write(10, 'Tel: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_tel'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+    }
+    else {
+      $pdf->Write(10, 'Tel: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_tel') . '; Fax: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_fax'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+    }
+    $pdf->SetFont('Helvetica', 'I', 8);
+    $pdf->SetY($mymargin_top + 16);
+    $pdf->Write(10, 'Email: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_email') . '; Website: ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_web'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetY($mymargin_top + 20);
+    $pdf->Write(10, 'Charitable Registration ' . CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'org_charitable_no'), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
   }
 
   // Right section
@@ -1050,7 +1050,7 @@ function cdntaxreceipts_sendCollectedPDF(&$pdf, $filename) {
 function _cdntaxreceipts_get_type_for_contribution($contribution) {
   // Require once lines are only needed if the civicrm.settings.php does not have the autoloader line
   require_once 'CRM/Utils/VersionCheck.php';
-  $version_checker = CRM_Utils_VersionCheck::singleton();
+  $version_checker = new CRM_Utils_VersionCheck();
   $majorVersion = floatval(substr($version_checker->localVersion, 0, 3));
   if ($majorVersion >= 4.3) {
     require_once 'CRM/Financial/DAO/FinancialType.php';
