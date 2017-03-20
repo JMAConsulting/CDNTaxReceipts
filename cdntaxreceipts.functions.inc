@@ -349,12 +349,12 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   }
 
   if ($issue_type == 'annual') {
-    $pdf->Write(10, ts("Thank you for giving in %1!", array( 1 => $display_year)));
-    $pdf->Write(10, "Contribution(s): ");
-    foreach ($receipt_contributions as $key => $value) {
-      $test = $receipt_contributions[$key]['contribution_id'];
-      $pdf->Write(10, $receipt_contributions[$key]['contribution_id'] . ' ');
-    }
+    /* $pdf->Write(10, ts("Thank you for giving in %1!", array( 1 => $display_year))); */
+    /* $pdf->Write(10, "Contribution(s): "); */
+    /* foreach ($receipt_contributions as $key => $value) { */
+    /*   $test = $receipt_contributions[$key]['contribution_id'];
+    /*   $pdf->Write(10, $receipt_contributions[$key]['contribution_id'] . ' '); */
+    /* } */
   }
   else if (strlen($source_funds) < 36 && strlen($source_funds) > 0) {
     $pdf->Write(10, $source_funds);
@@ -479,6 +479,22 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
     $pdf->Write(10, 'Executive Director');
   }
 
+  if ($issue_type != 'annual') {
+    $eligible_amount = $pdf_variables['contribution']->total_amount - $pdf_variables['contribution']->non_deductible_amount;
+    $totalAmount = CRM_Utils_Money::format($pdf_variables['contribution']->total_amount);
+    $nonDeductibleAmount = $pdf_variables['contribution']->non_deductible_amount;
+  }
+  elseif ($issue_type == 'annual') {
+    $nonDeductibleAmount = 0;
+    if (!empty($receipt_contributions)) {
+      foreach ($receipt_contributions as $contribRecord) {
+        $nonDeductibleAmount += $contribRecord['non_deductible_amount'];
+      }
+    }
+    $totalAmount = $amount + $nonDeductibleAmount;
+    $eligible_amount = $amount;
+  }
+
   // Line at the bottom
   $pdf->Line($mymargin_left, $mymargin_top + 95, 198, $mymargin_top + 95, 'dash');
   
@@ -504,13 +520,14 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
   $pdf->Write(10, $address_line_2, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 111);
   $pdf->Write(10, $address_line_3, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
-  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 125);
-  civicrm_cdntaxreceipts_write_field($pdf, "Description:   ", $pdf_variables['description']);
+  if ($issue_type != 'annual') {
+    $pdf->SetY($mymargin_top + $y_detailscolumnstart + 125);
+    civicrm_cdntaxreceipts_write_field($pdf, "Description:   ", $pdf_variables['description']);
+  }
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 129);
-  civicrm_cdntaxreceipts_write_field($pdf, "Total Amount Received:   ", CRM_Utils_Money::format($pdf_variables['contribution']->total_amount));
+  civicrm_cdntaxreceipts_write_field($pdf, "Total Amount Received:   ", CRM_Utils_Money::format($totalAmount));
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 133);
-  civicrm_cdntaxreceipts_write_field($pdf, "Value of Advantage:   ", CRM_Utils_Money::format($pdf_variables['contribution']->non_deductible_amount));
-  $eligible_amount = $pdf_variables['contribution']->total_amount - $pdf_variables['contribution']->non_deductible_amount;
+  civicrm_cdntaxreceipts_write_field($pdf, "Value of Advantage:   ", CRM_Utils_Money::format($nonDeductibleAmount));
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 137);
   civicrm_cdntaxreceipts_write_field($pdf, "Eligible Amount For Tax Purposes:     ", CRM_Utils_Money::format($eligible_amount));
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 141);
@@ -921,6 +938,7 @@ function cdntaxreceipts_issueAnnualTaxReceipt( $contactId, $year, &$collectedPdf
         'contribution_amount' => $c['total_amount'],
         'receipt_amount' => $eligibleAmount,
         'receive_date' => $c['receive_date'],
+        'non_deductible_amount' => $c['non_deductible_amount'],
       );
       $totalReceipt += $eligibleAmount;
     }
@@ -1015,6 +1033,7 @@ function cdntaxreceipts_issueAggregateTaxReceipt($contactId, $year, $contributio
         'contribution_amount' => $c['total_amount'],
         'receipt_amount' => $eligibleAmount,
         'receive_date' => $c['receive_date'],
+        'non_deductible_amount' => $c['non_deductible_amount'],
       );
       $totalReceipt += $eligibleAmount;
     }
