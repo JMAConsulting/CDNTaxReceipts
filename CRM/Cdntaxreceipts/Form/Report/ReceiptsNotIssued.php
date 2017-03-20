@@ -7,9 +7,13 @@ require_once('CRM/Utils/Array.php');
 
 class CRM_Cdntaxreceipts_Form_Report_ReceiptsNotIssued extends CRM_Report_Form {
 
-   protected $_useEligibilityHooks = FALSE;
+  protected $_useEligibilityHooks = FALSE;
+  CONST SETTINGS = 'CDNTaxReceipts';
 
   function __construct() {
+
+    $this->_customGroupExtends = array('Contact', 'Individual', 'Organization', 'Contribution');
+    $this->_autoIncludeIndexedFieldsAsOrderBys = TRUE;
 
     $this->_columns = array(
       'civicrm_contact' =>
@@ -79,11 +83,18 @@ class CRM_Cdntaxreceipts_Form_Report_ReceiptsNotIssued extends CRM_Report_Form {
       ),
     );
 
+    if (CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'enable_advanced_eligibility_report', NULL, 0) == 1) {
+      $enable_options = array( 1 => ts('Yes'), 0 => ts('No'));
+    }
+    elseif (CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'enable_advanced_eligibility_report', NULL, 0) == 0) {
+      $enable_options = array( 0 => ts('No'), 1 => ts('Yes'));
+    }
     $this->_options =
       array(
         'use_advanced_eligibility' => array('title' => ts('Use Advanced Eligibility (Hooks - Memory Intensive)', array('domain' => 'org.civicrm.cdntaxreceipts')),
-        'type' => 'checkbox',
-      ),
+          'type' => 'select',
+          'options' => $enable_options,
+        ),
     );
     parent::__construct();
   }
@@ -107,6 +118,9 @@ class CRM_Cdntaxreceipts_Form_Report_ReceiptsNotIssued extends CRM_Report_Form {
           if (CRM_Utils_Array::value('required', $field) ||
             CRM_Utils_Array::value($fieldName, $this->_params['fields'])
           ) {
+            if ( $fieldName == 'total_amount' && $this->_useEligibilityHooks) {
+              $field['dbAlias'] = "cdntax_t.eligible_amount";
+            }
             $alias = "{$tableName}_{$fieldName}";
             $select[] = "{$field['dbAlias']} as {$alias}";
             $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value('type', $field);
@@ -159,8 +173,8 @@ class CRM_Cdntaxreceipts_Form_Report_ReceiptsNotIssued extends CRM_Report_Form {
     }
     else {
       $this->_where .= "
-      AND {$this->_aliases['civicrm_financial_type']}.is_deductible = 1
       AND {$this->_aliases['civicrm_contribution']}.contribution_status_id = 1
+      AND {$this->_aliases['civicrm_financial_type']}.is_deductible = 1
       AND ({$this->_aliases['civicrm_contribution']}.total_amount - COALESCE({$this->_aliases['civicrm_contribution']}.non_deductible_amount,0)) > 0
       ";
     }
@@ -171,10 +185,11 @@ class CRM_Cdntaxreceipts_Form_Report_ReceiptsNotIssued extends CRM_Report_Form {
 
     $this->beginPostProcess();
 
-    if (array_key_exists('options', $this->_params) &&
-      CRM_Utils_Array::value('use_advanced_eligibility', $this->_params['options'])) {
-      $select[] = " '' as blankColumnBegin";
-      $this->_useEligibilityHooks = TRUE;
+    if (array_key_exists('use_advanced_eligibility', $this->_params)) {
+      if ($this->_params['use_advanced_eligibility'] == 1) {
+        $select[] = " '' as blankColumnBegin";
+        $this->_useEligibilityHooks = TRUE;
+      }
     }
     // set up the temporary tables to do eligibility calculations
     if ($this->_useEligibilityHooks) {
@@ -194,7 +209,8 @@ class CRM_Cdntaxreceipts_Form_Report_ReceiptsNotIssued extends CRM_Report_Form {
   function createTempEligibilityTable() {
     $sql = "
 CREATE TEMPORARY TABLE cdntaxreceipts_temp_civireport_eligible (
-  contribution_id int unsigned
+  contribution_id int unsigned,
+  eligible_amount decimal(20,2)
 ) ENGINE=HEAP DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci";
     CRM_Core_DAO::executeQuery($sql);
 
@@ -206,7 +222,9 @@ CREATE TEMPORARY TABLE cdntaxreceipts_temp_civireport_eligible (
 
     while ( $dao->fetch() ) {
       if ( cdntaxreceipts_eligibleForReceipt($dao->id) ) {
-        $sql = "INSERT INTO cdntaxreceipts_temp_civireport_eligible (contribution_id) VALUES ($dao->id)";
+        $amount = cdntaxreceipts_eligibleAmount($dao->id);
+        $sql = "INSERT INTO cdntaxreceipts_temp_civireport_eligible (contribution_id,eligible_amount)
+                VALUES ($dao->id, $amount)";
         CRM_Core_DAO::executeQuery($sql);
       }
     }
