@@ -479,12 +479,12 @@ function cdntaxreceipts_createPDF(&$pdf, $pdf_variables) {
     $pdf->Write(10, 'Executive Director');
   }
 
-  if ($issue_type != 'annual') {
+  if ($issue_type != 'annual' && $issue_type != 'aggregate') {
     $eligible_amount = $pdf_variables['contribution']->total_amount - $pdf_variables['contribution']->non_deductible_amount;
-    $totalAmount = CRM_Utils_Money::format($pdf_variables['contribution']->total_amount);
+    $totalAmount = $pdf_variables['contribution']->total_amount;
     $nonDeductibleAmount = $pdf_variables['contribution']->non_deductible_amount;
   }
-  elseif ($issue_type == 'annual') {
+  elseif ($issue_type == 'annual' || $issue_type == 'aggregate') {
     $nonDeductibleAmount = 0;
     if (!empty($receipt_contributions)) {
       foreach ($receipt_contributions as $contribRecord) {
