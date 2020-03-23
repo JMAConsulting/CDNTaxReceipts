@@ -276,6 +276,8 @@ function cdntaxreceipts_generateFormattedReceipt($receipt, &$collectedPdf = NULL
     "inkind_values" => isset($receipt['inkind_values']) ? $receipt['inkind_values'] : array(),
     "receipt_contributions" => $receipt['contributions'],
     "receipt_status" => $receipt['receipt_status'],
+    "advantage_description" => $receipt['advantage_description'],
+    "advantage_amount" => $receipt['advantage_amount'],
   );
 
   $output_files = array($pdf);
@@ -361,6 +363,8 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
   $issue_type = $pdf_variables["issue_type"];
   $receipt_contributions = $pdf_variables['receipt_contributions'];
   $receipt_status = $pdf_variables['receipt_status'];
+  $advantage_description = $pdf_variables['advantage_description'];
+  $advantage_amount = $pdf_variables['advantage_amount'];
 
   // Middle center section
   if ($mode == CDNTAXRECEIPTS_MODE_PREVIEW) {
@@ -520,6 +524,19 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
     }
 
   }
+
+  // Advantage fields.
+  if ($advantage_amount > 0) {
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 38);
+    $pdf->SetFont('Helvetica', 'B', 8);
+    $pdf->Write(10, ts("Value of advantage to: %1", array(1 => $advantage_amount)));
+  }
+  if (!empty($advantage_description)) {
+    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 40);
+    $pdf->SetFont('Helvetica', 'B', 8);
+    $pdf->Write(10, ts("Description of advantage: %1", array(1 => $advantage_description)));
+  }
+
 
   // Bottom left section
   if (!empty($pdf_template_file)) {
@@ -746,6 +763,9 @@ function cdntaxreceipts_issueTaxReceipt($contribution, &$collectedPdf = NULL, $m
     $inkind_values[] = $values[$custom_id];
   }
 
+  // Get description advantage field
+  cdntaxreceipts_advantage($contribution->id, NULL, $advantage, TRUE);
+
   $receipt = array(
     'receipt_no' => $receipt_no,
     'issued_on' =>  (int) $_SERVER['REQUEST_TIME'],
@@ -758,6 +778,8 @@ function cdntaxreceipts_issueTaxReceipt($contribution, &$collectedPdf = NULL, $m
     'inkind_values' => $inkind_values,
     'receipt_status' => ($is_duplicate && isset($receipt)) ? $receipt['receipt_status'] : 'issued',
     'email_tracking_id' => md5(uniqid(rand(), TRUE)),
+    'advantage_description' => CRM_Utils_Array::value('advantage_description', $advantage, NULL),
+    'advantage_amount' => $contribution->non_deductible_amount,
   );
 
   if ( $contribution->source != '' ) {
@@ -770,6 +792,8 @@ function cdntaxreceipts_issueTaxReceipt($contribution, &$collectedPdf = NULL, $m
       'contribution_amount' => $contribution->total_amount,
       'receipt_amount' => $receipt['receipt_amount'],
       'receive_date' => $contribution->receive_date,
+      'advantage_description' => CRM_Utils_Array::value('advantage_description', $advantage, NULL),
+      'advantage_amount' => $contribution->non_deductible_amount,
     )
   );
 
