@@ -1,10 +1,26 @@
-<table id="advantage-description" class="hiddenElement">
-    <tr class="crm-contribution-form-block-advantage_description">
-        <td class="label">{$form.advantage_description.label}</td>
-        <td>{$form.advantage_description.html}</td>
-    </tr>
-</table>
-
+{if $isView}
+    <table id="advantage-description" class="hiddenElement">
+        <tr class="crm-contribution-form-block-advantage_description">
+            <td class="label">{ts}Description of advantage{/ts}</td>
+            <td>{$advantage_description}</td>
+        </tr>
+    </table>
+{literal}
+    <script type="text/javascript">
+    CRM.$(function($) {
+        var amount = $('form#ContributionView').find('td.label:contains("Non-deductible Amount")');
+        amount.text("Advantage Amount");
+        $('#advantage-description tr').insertAfter(amount.parent('tr'));
+    });
+    </script>
+{/literal}
+{else}
+    <table id="advantage-description" class="hiddenElement">
+        <tr class="crm-contribution-form-block-advantage_description">
+            <td class="label">{$form.advantage_description.label}</td>
+            <td>{$form.advantage_description.html}</td>
+        </tr>
+    </table>
 {literal}
 <script type="text/javascript">
     CRM.$(function($) {
@@ -30,3 +46,4 @@
     });
 </script>
 {/literal}
+{/if}

@@ -26,6 +26,17 @@ function cdntaxreceipts_civicrm_buildForm( $formName, &$form ) {
       )
     );
     $subName = 'view_tax_receipt';
+
+    // Advantage fields
+    $form->assign('isView', TRUE);
+    cdntaxreceipts_advantage($contributionId, NULL, $defaults, TRUE);
+    if (!empty($defaults['advantage_description'])) {
+      $form->assign('advantage_description', $defaults['advantage_description']);
+    }
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => 'CRM/Cdntaxreceipts/Form/AddAdvantage.tpl',
+    ));
+
     if ( isset($contributionId) && cdntaxreceipts_eligibleForReceipt($contributionId) ) {
       list($issued_on, $receipt_id) = cdntaxreceipts_issued_on($contributionId);
       $is_original_receipt = empty($issued_on);
