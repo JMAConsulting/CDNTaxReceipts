@@ -43,6 +43,32 @@ function cdntaxreceipts_civicrm_buildForm( $formName, &$form ) {
       $form->addButtons($buttons);
     }
   }
+  if (is_a($form, 'CRM_Contribute_Form_Contribution') && in_array($form->_action, [CRM_Core_Action::ADD, CRM_Core_Action::UPDATE])) {
+    $form->add('text', 'non_deductible_amount', ts('Advantage Amount'), NULL);
+    $form->add('textarea', 'advantage_description', ts('Advantage Description'), ['cols' => '60', 'rows' => '4']);
+
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => 'CRM/Cdntaxreceipts/Form/AddAdvantage.tpl',
+    ));
+  }
+}
+
+/**
+ * Implements hook_civicrm_validateForm().
+ *
+ * @param string $formName
+ * @param array $fields
+ * @param array $files
+ * @param CRM_Core_Form $form
+ * @param array $errors
+ */
+function cdntaxreceipts_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
+
+  // Require description for advantage amount if advantage amount is filled in.
+  if (is_a($form, 'CRM_Contribute_Form_Contribution')
+    && CRM_Utils_Array::value('non_deductible_amount', $fields) && !CRM_Utils_Array::value('advantage_description', $fields)) {
+    $errors['advantage_description'] = ts('Please enter a description for advantage amount');
+  }
 }
 
 /**
@@ -53,6 +79,11 @@ function cdntaxreceipts_civicrm_buildForm( $formName, &$form ) {
  */
 
 function cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
+
+  // Handle saving of advantage amount
+  if (is_a($form, 'CRM_Contribute_Form_Contribution')) {
+
+  }
 
   // first check whether I really need to process this form
   if ( ! is_a( $form, 'CRM_Contribute_Form_ContributionView' ) ) {

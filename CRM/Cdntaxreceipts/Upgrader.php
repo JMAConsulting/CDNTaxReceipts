@@ -89,6 +89,13 @@ AND COLUMN_NAME = 'receipt_status'");
     return TRUE;
   }
 
+  public function upgrade_1510() {
+    $this->ctx->log->info('Applying update 1510: Adding gift advantage description field');
+    CRM_Core_DAO::executeQuery('ALTER TABLE cdntaxreceipts_log_contributions ADD advantage_description varchar(255) NULL');
+    return TRUE;
+  }
+
+
 
   function _create_message_template($email_message, $email_subject) {
 
