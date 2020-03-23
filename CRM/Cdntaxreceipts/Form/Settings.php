@@ -1,6 +1,7 @@
 <?php
 
 require_once 'CRM/Core/Form.php';
+require_once 'cdntaxreceipts.functions.inc';
 
 /**
  * Form controller class
@@ -69,31 +70,31 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     }
     else if ( $mode == 'defaults' ) {
       $defaults = array(
-        'org_name' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_name'),
-        'org_address_line1' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_address_line1'),
-        'org_address_line2' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_address_line2'),
-        'org_tel' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_tel'),
-        'org_fax' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_fax'),
-        'org_email' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_email'),
-        'org_web' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_web'),
-        'receipt_logo' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_logo'),
-        'receipt_signature' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_signature'),
-        'receipt_watermark' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_watermark'),
-        'receipt_pdftemplate' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_pdftemplate'),
-        'org_charitable_no' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'org_charitable_no'),
+        'org_name' => Civi::settings()->get('org_name'),
+        'org_address_line1' => Civi::settings()->get('org_address_line1'),
+        'org_address_line2' => Civi::settings()->get('org_address_line2'),
+        'org_tel' => Civi::settings()->get('org_tel'),
+        'org_fax' => Civi::settings()->get('org_fax'),
+        'org_email' => Civi::settings()->get('org_email'),
+        'org_web' => Civi::settings()->get('org_web'),
+        'receipt_logo' => Civi::settings()->get('receipt_logo'),
+        'receipt_signature' => Civi::settings()->get('receipt_signature'),
+        'receipt_watermark' => Civi::settings()->get('receipt_watermark'),
+        'receipt_pdftemplate' => Civi::settings()->get('receipt_pdftemplate'),
+        'org_charitable_no' => Civi::settings()->get('org_charitable_no'),
       );
       return $defaults;
     }
     else if ( $mode == 'post' ) {
       $values = $this->exportValues();
-      CRM_Core_BAO_Setting::setItem($values['org_name'], self::SETTINGS, 'org_name');
-      CRM_Core_BAO_Setting::setItem($values['org_address_line1'], self::SETTINGS, 'org_address_line1');
-      CRM_Core_BAO_Setting::setItem($values['org_address_line2'], self::SETTINGS, 'org_address_line2');
-      CRM_Core_BAO_Setting::setItem($values['org_tel'], self::SETTINGS, 'org_tel');
-      CRM_Core_BAO_Setting::setItem($values['org_fax'], self::SETTINGS, 'org_fax');
-      CRM_Core_BAO_Setting::setItem($values['org_email'], self::SETTINGS, 'org_email');
-      CRM_Core_BAO_Setting::setItem($values['org_web'], self::SETTINGS, 'org_web');
-      CRM_Core_BAO_Setting::setItem($values['org_charitable_no'], self::SETTINGS, 'org_charitable_no');
+      Civi::settings()->set('org_name', $values['org_name']);
+      Civi::settings()->set('org_address_line1', $values['org_address_line1']);
+      Civi::settings()->set('org_address_line2', $values['org_address_line2']);
+      Civi::settings()->set('org_tel', $values['org_tel']);
+      Civi::settings()->set('org_fax', $values['org_fax']);
+      Civi::settings()->set('org_email', $values['org_email']);
+      Civi::settings()->set('org_web', $values['org_web']);
+      Civi::settings()->set('org_charitable_no', $values['org_charitable_no']);
     }
 
   }
@@ -101,6 +102,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
   function processReceiptOptions($mode) {
     if ( $mode == 'build' ) {
       $this->add('text', 'receipt_prefix', ts('Receipt Prefix', array('domain' => 'org.civicrm.cdntaxreceipts')));
+      $this->add('checkbox', 'receipt_serial', ts('Serial Receipt Numbers', array('domain' => 'org.civicrm.cdntaxreceipts')));
       $this->add('text', 'receipt_authorized_signature_text', ts('Authorized Signature Text', array('domain' => 'org.civicrm.cdntaxreceipts')));
 
       $uploadSize = cdntaxreceipts_getCiviSetting('maxFileSize');
@@ -130,16 +132,17 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     }
     else if ( $mode == 'defaults' ) {
       $defaults = array(
-        'receipt_prefix' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_prefix'),
-        'receipt_authorized_signature_text' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'receipt_authorized_signature_text'),
+        'receipt_prefix' => Civi::settings()->get('receipt_prefix'),
+        'receipt_serial' => Civi::settings()->get('receipt_serial'),
+        'receipt_authorized_signature_text' => Civi::settings()->get('receipt_authorized_signature_text'),
       );
       return $defaults;
     }
     else if ( $mode == 'post' ) {
       $values = $this->exportValues();
-      CRM_Core_BAO_Setting::setItem($values['receipt_prefix'], self::SETTINGS, 'receipt_prefix');
-      CRM_Core_BAO_Setting::setItem($values['receipt_authorized_signature_text'], self::SETTINGS, 'receipt_authorized_signature_text');
-
+      Civi::settings()->set('receipt_prefix', $values['receipt_prefix']);
+      Civi::settings()->set('receipt_serial', $values['receipt_serial'] ?? 0);
+      Civi::settings()->set('receipt_authorized_signature_text', $values['receipt_authorized_signature_text']);
       $receipt_logo = $this->getSubmitValue('receipt_logo');
       $receipt_signature = $this->getSubmitValue('receipt_signature');
       $receipt_watermark = $this->getSubmitValue('receipt_watermark');
@@ -154,7 +157,7 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
             if (!move_uploaded_file($upload_file['tmp_name'], $filename)) {
               CRM_Core_Error::fatal(ts('Could not upload the file'));
             }
-            CRM_Core_BAO_Setting::setItem($filename, self::SETTINGS, $key);
+            Civi::settings()->set($key, $filename);
           }
         }
       }
@@ -165,11 +168,12 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     if ( $mode == 'build' ) {
       $this->addElement('checkbox', 'issue_inkind', ts('Setup in-kind receipts?', array('domain' => 'org.civicrm.cdntaxreceipts')));
 
-      $yesno_options = array();
-      $yesno_options[] = $this->createElement('radio', NULL, NULL, 'Yes', 1);
-      $yesno_options[] = $this->createElement('radio', NULL, NULL, 'No', 0);
-      $this->addGroup($yesno_options, 'enable_email', ts('Send receipts by email?', array('domain' => 'org.civicrm.cdntaxreceipts')));
-      $this->addRule('enable_email', 'Enable or disable email receipts', 'required');
+      $delivery_options = array();
+      $delivery_options[] = $this->createElement('radio', NULL, NULL, 'Print only', CDNTAX_DELIVERY_PRINT_ONLY);
+      $delivery_options[] = $this->createElement('radio', NULL, NULL, 'Email or print', CDNTAX_DELIVERY_PRINT_EMAIL);
+      $delivery_options[] = $this->createElement('radio', NULL, NULL, 'Data only', CDNTAX_DELIVERY_DATA_ONLY);
+      $this->addGroup($delivery_options, 'delivery_method', ts('Delivery Method', array('domain' => 'org.civicrm.cdntaxreceipts')));
+      $this->addRule('delivery_method', 'Delivery Method', 'required');
 
       $yesno_options = array();
       $yesno_options[] = $this->createElement('radio', NULL, NULL, 'Yes', 1);
@@ -181,23 +185,21 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
       $yesno_options2[] = $this->createElement('radio', NULL, NULL, 'Yes', 1);
       $yesno_options2[] = $this->createElement('radio', NULL, NULL, 'No', 0);
       $this->addGroup($yesno_options2, 'enable_advanced_eligibility_report', ts('Enable Advanced Eligibility Check?', array('domain' => 'org.civicrm.cdntaxreceipts')));
-
     }
     else if ( $mode == 'defaults' ) {
       $defaults = array(
         'issue_inkind' => 0,
-        'enable_email' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'enable_email', NULL, 0),
-        'attach_to_workflows' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'attach_to_workflows', NULL, 0),
-        'enable_advanced_eligibility_report' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'enable_advanced_eligibility_report', NULL, 0),
+        'delivery_method' => Civi::settings()->get('delivery_method') ?? CDNTAX_DELIVERY_PRINT_ONLY,
+        'attach_to_workflows' => Civi::settings()->get('attach_to_workflows') ?? 0,
+        'enable_advanced_eligibility_report' => Civi::settings()->get('enable_advanced_eligibility_report') ?? 0,
       );
       return $defaults;
     }
     else if ( $mode == 'post' ) {
       $values = $this->exportValues();
-      CRM_Core_BAO_Setting::setItem($values['enable_email'], self::SETTINGS, 'enable_email');
-      CRM_Core_BAO_Setting::setItem($values['attach_to_workflows'], self::SETTINGS, 'attach_to_workflows');
-      CRM_Core_BAO_Setting::setItem($values['enable_advanced_eligibility_report'], self::SETTINGS, 'enable_advanced_eligibility_report');
-
+      Civi::settings()->set('delivery_method', $values['delivery_method']);
+      Civi::settings()->set('attach_to_workflows', $values['attach_to_workflows']);
+      Civi::settings()->set('enable_advanced_eligibility_report', $values['enable_advanced_eligibility_report']);
       if (isset($values['issue_inkind']) == TRUE) {
         if ( $values['issue_inkind'] == 1 ) {
           cdntaxreceipts_configure_inkind_fields();
@@ -216,15 +218,15 @@ class CRM_Cdntaxreceipts_Form_Settings extends CRM_Core_Form {
     }
     else if ( $mode == 'defaults' ) {
       $defaults = array(
-        'email_from' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'email_from'),
-        'email_archive' => CRM_Core_BAO_Setting::getItem(self::SETTINGS, 'email_archive'),
+        'email_from' => Civi::settings()->get('email_from'),
+        'email_archive' => Civi::settings()->get('email_archive'),
       );
       return $defaults;
     }
     else if ( $mode == 'post' ) {
       $values = $this->exportValues();
-      CRM_Core_BAO_Setting::setItem($values['email_from'], self::SETTINGS, 'email_from');
-      CRM_Core_BAO_Setting::setItem($values['email_archive'], self::SETTINGS, 'email_archive');
+      Civi::settings()->set('email_from', $values['email_from']);
+      Civi::settings()->set('email_archive', $values['email_archive']);
     }
   }
 

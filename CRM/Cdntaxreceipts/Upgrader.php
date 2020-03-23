@@ -72,10 +72,23 @@ AND COLUMN_NAME = 'receipt_status'");
 
   public function upgrade_1322() {
     $this->ctx->log->info('Applying update 1322: Message Templates');
-    $current_message = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'email_message');
-    $current_subject = CRM_Core_BAO_Setting::getItem(CDNTAX_SETTINGS, 'email_subject') . ' {$receipt.receipt_no}';
+    $current_message = Civi::settings()->get('email_message');
+    $current_subject = Civi::settings()->get('email_subject') . ' {$receipt.receipt_no}';
     return $this->_create_message_template($current_message, $current_subject);
   }
+
+  public function upgrade_1410() {
+    $this->ctx->log->info('Applying update 1410: Data mode');
+    $email_enabled = Civi::settings()->get('enable_email');
+    if ($email_enabled) {
+      Civi::settings()->set('delivery_method', 1);
+    }
+    else {
+      Civi::settings()->set('delivery_method', 0);
+    }
+    return TRUE;
+  }
+
 
   function _create_message_template($email_message, $email_subject) {
 
