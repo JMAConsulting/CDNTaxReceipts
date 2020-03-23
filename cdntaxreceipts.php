@@ -46,6 +46,10 @@ function cdntaxreceipts_civicrm_buildForm( $formName, &$form ) {
   if (is_a($form, 'CRM_Contribute_Form_Contribution') && in_array($form->_action, [CRM_Core_Action::ADD, CRM_Core_Action::UPDATE])) {
     $form->add('text', 'non_deductible_amount', ts('Advantage Amount'), NULL);
     $form->add('textarea', 'advantage_description', ts('Advantage Description'), ['cols' => '60', 'rows' => '4']);
+    if ($form->_action & CRM_Core_Action::UPDATE) {
+      cdntaxreceipts_advantage($form->_id, NULL, $defaults, TRUE);
+      $form->setDefaults($defaults);
+    }
 
     CRM_Core_Region::instance('page-body')->add(array(
       'template' => 'CRM/Cdntaxreceipts/Form/AddAdvantage.tpl',
@@ -80,9 +84,11 @@ function cdntaxreceipts_civicrm_validateForm($formName, &$fields, &$files, &$for
 
 function cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
 
-  // Handle saving of advantage amount
+  // Handle saving of advantage description
   if (is_a($form, 'CRM_Contribute_Form_Contribution')) {
-
+    if (CRM_Utils_Array::value('advantage_description', $form->_params) && !empty($form->_id)) {
+      cdntaxreceipts_advantage($form->_id, $form->_params['advantage_description']);
+    }
   }
 
   // first check whether I really need to process this form

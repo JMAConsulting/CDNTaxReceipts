@@ -90,8 +90,15 @@ AND COLUMN_NAME = 'receipt_status'");
   }
 
   public function upgrade_1510() {
-    $this->ctx->log->info('Applying update 1510: Adding gift advantage description field');
-    CRM_Core_DAO::executeQuery('ALTER TABLE cdntaxreceipts_log_contributions ADD advantage_description varchar(255) NULL');
+    $this->ctx->log->info('Applying update 1510: Adding gift advantage description table');
+    $sql = "CREATE TABLE IF NOT EXISTS cdntaxreceipts_advantage (
+      id int(11) UNSIGNED NOT NULL,
+      contribution_id int(10) UNSIGNED NOT NULL,
+      advantage_description varchar(255) DEFAULT NULL,
+      PRIMARY KEY (id),
+      INDEX contribution_id (contribution_id)
+    )";
+    CRM_Core_DAO::executeQuery($sql);
     return TRUE;
   }
 

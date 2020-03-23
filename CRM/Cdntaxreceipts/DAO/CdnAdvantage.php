@@ -36,11 +36,18 @@ class CRM_Cdntaxreceipts_DAO_CdnAdvantage extends CRM_Core_DAO {
   public $id;
 
   /**
-   * FK to Contact
+   * Contribution ID
    *
    * @var int
    */
-  public $contact_id;
+  public $contribution_id;
+
+  /**
+   * Advantage Description
+   *
+   * @var string
+   */
+  public $advantage_description;
 
   /**
    * Class constructor.
@@ -59,7 +66,6 @@ class CRM_Cdntaxreceipts_DAO_CdnAdvantage extends CRM_Core_DAO {
   public static function getReferenceColumns() {
     if (!isset(Civi::$statics[__CLASS__]['links'])) {
       Civi::$statics[__CLASS__]['links'] = static::createReferenceColumns(__CLASS__);
-      Civi::$statics[__CLASS__]['links'][] = new CRM_Core_Reference_Basic(self::getTableName(), 'contact_id', 'civicrm_contact', 'id');
       CRM_Core_DAO_AllCoreTables::invoke(__CLASS__, 'links_callback', Civi::$statics[__CLASS__]['links']);
     }
     return Civi::$statics[__CLASS__]['links'];
@@ -84,15 +90,25 @@ class CRM_Cdntaxreceipts_DAO_CdnAdvantage extends CRM_Core_DAO {
           'bao' => 'CRM_Cdntaxreceipts_DAO_CdnAdvantage',
           'localizable' => 0,
         ],
-        'contact_id' => [
-          'name' => 'contact_id',
+        'contribution_id' => [
+          'name' => 'contribution_id',
           'type' => CRM_Utils_Type::T_INT,
-          'description' => ts('FK to Contact'),
-          'where' => 'cdntaxreceipts_advantage.contact_id',
+          'description' => ts('Contribution ID'),
+          'where' => 'cdntaxreceipts_advantage.contribution_id',
           'table_name' => 'cdntaxreceipts_advantage',
           'entity' => 'CdnAdvantage',
           'bao' => 'CRM_Cdntaxreceipts_DAO_CdnAdvantage',
           'localizable' => 0,
+        ],
+        'advantage_description' => [
+          'name' => 'advantage_description',
+          'type' => CRM_Utils_Type::T_STRING,
+          'description' => ts('Description of Advantage'),
+          'where' => 'cdntaxreceipts_advantage.advantage_description',
+          'table_name' => 'cdntaxreceipts_advantage',
+          'entity' => 'CdnAdvantage',
+          'bao' => 'CRM_Cdntaxreceipts_DAO_CdnAdvantage',
+          'localizable' => 1,
         ],
       ];
       CRM_Core_DAO_AllCoreTables::invoke(__CLASS__, 'fields_callback', Civi::$statics[__CLASS__]['fields']);
@@ -139,7 +155,7 @@ class CRM_Cdntaxreceipts_DAO_CdnAdvantage extends CRM_Core_DAO {
    * @return array
    */
   public static function &import($prefix = FALSE) {
-    $r = CRM_Core_DAO_AllCoreTables::getImports(__CLASS__, 'ceipts_advantage', $prefix, []);
+    $r = CRM_Core_DAO_AllCoreTables::getImports(__CLASS__, 'cdntaxreceipts_advantage', $prefix, []);
     return $r;
   }
 
@@ -151,7 +167,7 @@ class CRM_Cdntaxreceipts_DAO_CdnAdvantage extends CRM_Core_DAO {
    * @return array
    */
   public static function &export($prefix = FALSE) {
-    $r = CRM_Core_DAO_AllCoreTables::getExports(__CLASS__, 'ceipts_advantage', $prefix, []);
+    $r = CRM_Core_DAO_AllCoreTables::getExports(__CLASS__, 'cdntaxreceipts_advantage', $prefix, []);
     return $r;
   }
 
