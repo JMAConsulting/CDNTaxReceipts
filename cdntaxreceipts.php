@@ -86,6 +86,16 @@ function cdntaxreceipts_civicrm_validateForm($formName, &$fields, &$files, &$for
   }
 }
 
+function cdntaxreceipts_civicrm_post($op, $objectName, $objectId, &$objectRef) {
+
+  // Handle saving of description of advantage
+  if ($objectName == "Contribution" && ($op == 'create' || $op == 'edit')) {
+    if (CRM_Utils_Array::value('advantage_description', $_POST)) {
+      cdntaxreceipts_advantage($objectId, $_POST['advantage_description']);
+    }
+  }
+}
+
 /**
  * Implementation of hook_civicrm_postProcess().
  *
@@ -94,13 +104,6 @@ function cdntaxreceipts_civicrm_validateForm($formName, &$fields, &$files, &$for
  */
 
 function cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
-
-  // Handle saving of advantage description
-  if (is_a($form, 'CRM_Contribute_Form_Contribution')) {
-    if (CRM_Utils_Array::value('advantage_description', $form->_params) && !empty($form->_id)) {
-      cdntaxreceipts_advantage($form->_id, $form->_params['advantage_description']);
-    }
-  }
 
   // first check whether I really need to process this form
   if ( ! is_a( $form, 'CRM_Contribute_Form_ContributionView' ) ) {
