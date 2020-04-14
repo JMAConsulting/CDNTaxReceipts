@@ -253,7 +253,6 @@ function cdntaxreceipts_generateFormattedReceipt($receipt, &$collectedPdf = NULL
   $pdf->setJPEGQuality('100');
 
   $pdf->SetAutoPageBreak('', $margin=0);
-
   $pdf_variables = array(
     "mode" => $mode,
     "mymargin_left" => $mymargin_left,
@@ -278,6 +277,7 @@ function cdntaxreceipts_generateFormattedReceipt($receipt, &$collectedPdf = NULL
     "receipt_status" => $receipt['receipt_status'],
     "advantage_description" => $receipt['advantage_description'],
     "advantage_amount" => $receipt['advantage_amount'],
+    "contribution_amount" => $receipt['contribution_amount'],
   );
 
   $output_files = array($pdf);
@@ -365,6 +365,7 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
   $receipt_status = $pdf_variables['receipt_status'];
   $advantage_description = $pdf_variables['advantage_description'];
   $advantage_amount = $pdf_variables['advantage_amount'];
+  $contribution_amount = $pdf_variables['contribution_amount'];
 
   // Middle center section
   if ($mode == CDNTAXRECEIPTS_MODE_PREVIEW) {
@@ -434,6 +435,9 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
   $pdf->Write(10, ts("Received on: %1", array(1 => $display_date, 'domain' => 'org.civicrm.cdntaxreceipts')));
   $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 18);
   $pdf->Write(10, ts("Eligible Amount:  $%1", array(1 => number_format($amount, 2), 'domain' => 'org.civicrm.cdntaxreceipts')));
+  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 24);
+  // JMA Addition
+  $pdf->Write(10, ts("Total Amount:  $%1", array(1 => number_format($contribution_amount, 2), 'domain' => 'org.civicrm.cdntaxreceipts')));
   $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
 
   if ($issue_type == 'annual') {
@@ -529,10 +533,10 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
   if ($advantage_amount > 0) {
     $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 38);
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->Write(10, ts("Value of advantage to: %1", array(1 => $advantage_amount)));
+    $pdf->Write(10, ts("Value of advantage: %1", array(1 => CRM_Utils_Money::format(number_format($advantage_amount, 2)), 'domain' => 'org.civicrm.cdntaxreceipts')));
   }
   if (!empty($advantage_description)) {
-    $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 40);
+    $pdf->SetXY($mymargin_left + 10, $mymargin_top + $y_detailscolumnstart + 44);
     $pdf->SetFont('Helvetica', 'B', 8);
     $pdf->Write(10, ts("Description of advantage: %1", array(1 => $advantage_description)));
   }
@@ -771,6 +775,7 @@ function cdntaxreceipts_issueTaxReceipt($contribution, &$collectedPdf = NULL, $m
     'issued_on' =>  (int) $_SERVER['REQUEST_TIME'],
     'contact_id' => $contribution->contact_id,
     'receipt_amount' => cdntaxreceipts_eligibleAmount($contribution->id),
+    'contribution_amount' => $contribution->total_amount,
     'is_duplicate' => $is_duplicate,
     'issue_type' => 'single',
     'issue_method' => $method,

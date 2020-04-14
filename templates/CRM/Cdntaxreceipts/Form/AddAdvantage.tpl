@@ -9,6 +9,9 @@
     <script type="text/javascript">
     CRM.$(function($) {
         var amount = $('form#ContributionView').find('td.label:contains("Non-deductible Amount")');
+        if (amount === '') {
+            amount = $('form#ContributionView').find('td.label:contains("Non-receiptable Amount")');
+        }
         amount.text("Advantage Amount");
         $('#advantage-description tr').insertAfter(amount.parent('tr'));
     });
@@ -34,7 +37,8 @@
             });
 
             function addRequired(mode) {
-                if (mode != '') {
+                mode = parseInt(mode);
+                if (mode != '' && mode > 0) {
                     $('label[for="advantage_description"]').find('span.crm-marker').remove();
                     $('label[for="advantage_description"]').append("<span class=\"crm-marker\" title=\"This field is required.\">&nbsp;*</span>");
                 }

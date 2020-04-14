@@ -56,7 +56,7 @@ function cdntaxreceipts_civicrm_buildForm( $formName, &$form ) {
   }
   if (is_a($form, 'CRM_Contribute_Form_Contribution') && in_array($form->_action, [CRM_Core_Action::ADD, CRM_Core_Action::UPDATE])) {
     $form->add('text', 'non_deductible_amount', ts('Advantage Amount'), NULL);
-    $form->add('textarea', 'advantage_description', ts('Advantage Description'), ['cols' => '60', 'rows' => '4']);
+    $form->add('text', 'advantage_description', ts('Advantage Description'), NULL);
     if ($form->_action & CRM_Core_Action::UPDATE) {
       cdntaxreceipts_advantage($form->_id, NULL, $defaults, TRUE);
       $form->setDefaults($defaults);
@@ -81,8 +81,14 @@ function cdntaxreceipts_civicrm_validateForm($formName, &$fields, &$files, &$for
 
   // Require description for advantage amount if advantage amount is filled in.
   if (is_a($form, 'CRM_Contribute_Form_Contribution')
-    && CRM_Utils_Array::value('non_deductible_amount', $fields) && !CRM_Utils_Array::value('advantage_description', $fields)) {
+    && (CRM_Utils_Array::value('non_deductible_amount', $fields) > 0) && !CRM_Utils_Array::value('advantage_description', $fields)) {
     $errors['advantage_description'] = ts('Please enter a description for advantage amount');
+  }
+  // Limit number of characters to 50.
+  if (is_a($form, 'CRM_Contribute_Form_Contribution') && CRM_Utils_Array::value('advantage_description', $fields)) {
+    if (strlen(CRM_Utils_Array::value('advantage_description', $fields)) > 50) {
+      $errors['advantage_description'] = ts('Advantage Description should not be more than 50 characters');
+    }
   }
 }
 
