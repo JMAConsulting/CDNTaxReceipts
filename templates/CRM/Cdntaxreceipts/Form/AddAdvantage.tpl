@@ -2,16 +2,13 @@
     <table id="advantage-description" class="hiddenElement">
         <tr class="crm-contribution-form-block-advantage_description">
             <td class="label">{ts}Description of advantage{/ts}</td>
-            <td>{$advantage_description}</td>
+            <td>{if $advantage_description}{$advantage_description}{else}-{/if}</td>
         </tr>
     </table>
 {literal}
     <script type="text/javascript">
     CRM.$(function($) {
-        var amount = $('form#ContributionView').find('td.label:contains("Non-deductible Amount")');
-        if (amount === '') {
-            amount = $('form#ContributionView').find('td.label:contains("Non-receiptable Amount")');
-        }
+        amount = $('form#ContributionView').find('td.label:contains("Non-receiptable Amount")');
         amount.text("Advantage Amount");
         $('#advantage-description tr').insertAfter(amount.parent('tr'));
     });
