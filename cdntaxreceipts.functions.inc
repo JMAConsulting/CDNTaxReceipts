@@ -533,7 +533,7 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
   if ($advantage_amount > 0) {
     $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 38);
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->Write(10, ts("Value of advantage: %1", array(1 => CRM_Utils_Money::format(number_format($advantage_amount, 2)), 'domain' => 'org.civicrm.cdntaxreceipts')));
+    $pdf->Write(10, ts("Value of advantage: $%1", array(1 => number_format($amount, 2), 'domain' => 'org.civicrm.cdntaxreceipts')));
   }
   if (!empty($advantage_description)) {
     $pdf->SetXY($mymargin_left + 10, $mymargin_top + $y_detailscolumnstart + 44);
