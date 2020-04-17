@@ -92,7 +92,7 @@ AND COLUMN_NAME = 'receipt_status'");
   public function upgrade_1510() {
     $this->ctx->log->info('Applying update 1510: Adding gift advantage description table');
     $sql = "CREATE TABLE IF NOT EXISTS cdntaxreceipts_advantage (
-      id int(11) UNSIGNED NOT NULL,
+      id int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
       contribution_id int(10) UNSIGNED NOT NULL,
       advantage_description varchar(255) DEFAULT NULL,
       PRIMARY KEY (id),
