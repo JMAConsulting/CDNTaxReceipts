@@ -590,20 +590,12 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
  */
 
 function cdntaxreceipts_configure_inkind_fields() {
+  $financialTypeID = civicrm_api3('FinancialType', 'create', [
+    'name' => 'In-kind',
+    'is_deductible' => TRUE,
+    'is_active' => TRUE,
+  ])['id'];
 
-  // check if the In-kind contribution type exists.  if not, create it.
-  require_once 'CRM/Financial/DAO/FinancialType.php';
-  $dao = new CRM_Financial_DAO_FinancialType();
-  $dao->name = 'In-kind';
-
-  if ( ! $dao->find(true) ) {
-    $dao->name = 'In-kind';
-    $dao->is_deductible = TRUE;
-    $dao->is_active = TRUE;
-    $dao->save();
-  }
-
-  $contrib_type_id = $dao->id;
 
   // check if the custom group exists.  if not, create it.
   $params = array(
@@ -618,7 +610,7 @@ function cdntaxreceipts_configure_inkind_fields() {
     $group = array(
       'title' => 'In-kind donation fields',
       'extends' => array( 'Contribution' ),
-      'extends_entity_column_value' => array( $contrib_type_id ),
+      'extends_entity_column_value' => [$financialTypeID],
       'collapse_display' => 0,
       'style' => 'Inline',
       'is_active' => 1,
