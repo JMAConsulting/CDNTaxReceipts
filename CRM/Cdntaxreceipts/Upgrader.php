@@ -107,6 +107,10 @@ AND COLUMN_NAME = 'receipt_status'");
 
     if ($financialType->find(TRUE)) {
       CRM_Financial_BAO_FinancialTypeAccount::createDefaultFinancialAccounts($financialType);
+      $CoSfinancialAccountTypeID = array_search('Cost of Sales', CRM_Core_OptionGroup::values('financial_account_type', FALSE, FALSE, FALSE, NULL, 'name'));
+      if ($CoSfinancialAccountTypeID) {
+        CRM_Core_DAO::executeQuery("DELETE FROM civicrm_entity_financial_account WHERE entity_table = 'civicrm_financial_type' AND financial_account_id = $CoSfinancialAccountTypeID AND entity_id = " . $financialType->id);
+      }
     }
 
     return TRUE;

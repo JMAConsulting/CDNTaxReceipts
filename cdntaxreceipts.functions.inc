@@ -595,7 +595,10 @@ function cdntaxreceipts_configure_inkind_fields() {
     'is_deductible' => TRUE,
     'is_active' => TRUE,
   ])['id'];
-
+  $CoSfinancialAccountTypeID = array_search('Cost of Sales', CRM_Core_OptionGroup::values('financial_account_type', FALSE, FALSE, FALSE, NULL, 'name'));
+  if ($CoSfinancialAccountTypeID) {
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_entity_financial_account WHERE entity_table = 'civicrm_financial_type' AND financial_account_id = $CoSfinancialAccountTypeID AND entity_id = $financialTypeID ");
+  }
 
   // check if the custom group exists.  if not, create it.
   $params = array(
@@ -616,7 +619,7 @@ function cdntaxreceipts_configure_inkind_fields() {
       'is_active' => 1,
       'version' => 3
     );
-    $result =& civicrm_api('custom_group', 'create', $group);
+    $result = civicrm_api('custom_group', 'create', $group);
   }
   foreach ( $result['values'] as $id => $detail ) {
     $custom_group_id = $id;
