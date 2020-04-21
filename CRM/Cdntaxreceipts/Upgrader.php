@@ -121,7 +121,7 @@ AND COLUMN_NAME = 'receipt_status'");
       if ($revenueAccountTypeID) {
         CRM_Core_DAO::executeQuery("UPDATE civicrm_financial_account fa
           INNER JOIN civicrm_entity_financial_account efa ON efa.financial_account_id = fa.id
-          SET fa.accounting_code = 4300
+          SET fa.accounting_code = '4300'
           efa.entity_table = 'civicrm_financial_type' AND fa.financial_account_type_id = %1 AND efa.entity_id = %2", [
           1 => [$revenueAccountTypeID, 'Positive'],
           2 => [$financialType->id, 'Positive'],
@@ -139,7 +139,7 @@ AND COLUMN_NAME = 'receipt_status'");
       if ($revenueAccountTypeID) {
         CRM_Core_DAO::executeQuery("UPDATE civicrm_financial_account fa
           INNER JOIN civicrm_entity_financial_account efa ON efa.financial_account_id = fa.id
-          SET fa.accounting_code = 4300
+          SET fa.accounting_code = '4300'
           efa.entity_table = 'civicrm_financial_type' AND fa.financial_account_type_id = %1 AND efa.entity_id = %2", [
           1 => [$revenueAccountTypeID, 'Positive'],
           2 => [$financialType->id, 'Positive'],
