@@ -113,13 +113,38 @@ AND COLUMN_NAME = 'receipt_status'");
           INNER JOIN civicrm_financial_account fa ON fa.id = efa.financial_account_id
           WHERE efa.entity_table = 'civicrm_financial_type' AND fa.financial_account_type_id = %1 AND efa.entity_id = %2", [
           1 => [$CoSfinancialAccountTypeID, 'Positive'],
-          2 => [$financialTypeID, 'Positive'],
+          2 => [$financialType->id, 'Positive'],
+        ]);
+      }
+      // Set the GL Account code to match master
+      $revenueAccountTypeID = array_search('Revenue', CRM_Core_OptionGroup::values('financial_account_type', FALSE, FALSE, FALSE, NULL, 'name'));
+      if ($revenueAccountTypeID) {
+        CRM_Core_DAO::executeQuery("UPDATE civicrm_financial_account fa
+          INNER JOIN civicrm_entity_financial_account efa ON efa.financial_account_id = fa.id
+          SET fa.accounting_code = 4300
+          efa.entity_table = 'civicrm_financial_type' AND fa.financial_account_type_id = %1 AND efa.entity_id = %2", [
+          1 => [$revenueAccountTypeID, 'Positive'],
+          2 => [$financialType->id, 'Positive'],
         ]);
       }
     }
     else {
       // Create Inkind financial type and fields
       cdntaxreceipts_configure_inkind_fields();
+      $financialType = new CRM_Financial_DAO_FinancialType();
+      $financialType->name = 'In-kind';
+      $financialType->find(TRUE);
+      // Set the GL Account code to match master
+      $revenueAccountTypeID = array_search('Revenue', CRM_Core_OptionGroup::values('financial_account_type', FALSE, FALSE, FALSE, NULL, 'name'));
+      if ($revenueAccountTypeID) {
+        CRM_Core_DAO::executeQuery("UPDATE civicrm_financial_account fa
+          INNER JOIN civicrm_entity_financial_account efa ON efa.financial_account_id = fa.id
+          SET fa.accounting_code = 4300
+          efa.entity_table = 'civicrm_financial_type' AND fa.financial_account_type_id = %1 AND efa.entity_id = %2", [
+          1 => [$revenueAccountTypeID, 'Positive'],
+          2 => [$financialType->id, 'Positive'],
+        ]);
+      }
     }
 
     return TRUE;
