@@ -597,7 +597,12 @@ function cdntaxreceipts_configure_inkind_fields() {
   ])['id'];
   $CoSfinancialAccountTypeID = array_search('Cost of Sales', CRM_Core_OptionGroup::values('financial_account_type', FALSE, FALSE, FALSE, NULL, 'name'));
   if ($CoSfinancialAccountTypeID) {
-    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_entity_financial_account WHERE entity_table = 'civicrm_financial_type' AND financial_account_id = $CoSfinancialAccountTypeID AND entity_id = $financialTypeID ");
+    CRM_Core_DAO::executeQuery("DELETE efa.* FROM civicrm_entity_financial_account efa
+     INNER JOIN civicrm_financial_account fa ON fa.id = efa.financial_account_id
+     WHERE efa.entity_table = 'civicrm_financial_type' AND fa.financial_account_type_id = %1 AND efa.entity_id = %2", [
+       1 => [$CoSfinancialAccountTypeID, 'Positive'],
+       2 => [$financialTypeID, 'Positive'],
+    ]);
   }
 
   // check if the custom group exists.  if not, create it.
@@ -654,7 +659,7 @@ function cdntaxreceipts_configure_inkind_fields() {
           ' the cost of the item donated (and the creditable amount) if either of those '.
           ' situations apply.';
       }
-      $result =& civicrm_api('custom_field', 'create', $field_params);
+      $result = civicrm_api('custom_field', 'create', $field_params);
     }
   }
 }
