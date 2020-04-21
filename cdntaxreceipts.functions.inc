@@ -1,5 +1,7 @@
 <?php
 
+use CRM_Cdntaxreceipts_ExtensionUtil as E;
+
 require_once 'tcpdf/tcpdf.php';
 require_once('FPDI/fpdi.php');
 
@@ -590,20 +592,21 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
  */
 
 function cdntaxreceipts_configure_inkind_fields() {
-  $financialTypeID = civicrm_api3('FinancialType', 'create', [
-    'name' => 'In-kind',
-    'is_deductible' => TRUE,
-    'is_active' => TRUE,
-  ])['id'];
-  $CoSfinancialAccountTypeID = array_search('Cost of Sales', CRM_Core_OptionGroup::values('financial_account_type', FALSE, FALSE, FALSE, NULL, 'name'));
-  if ($CoSfinancialAccountTypeID) {
-    CRM_Core_DAO::executeQuery("DELETE efa.* FROM civicrm_entity_financial_account efa
-     INNER JOIN civicrm_financial_account fa ON fa.id = efa.financial_account_id
-     WHERE efa.entity_table = 'civicrm_financial_type' AND fa.financial_account_type_id = %1 AND efa.entity_id = %2", [
-       1 => [$CoSfinancialAccountTypeID, 'Positive'],
-       2 => [$financialTypeID, 'Positive'],
-    ]);
+  // check if the In-kind contribution type exists.  if not, create it.
+  require_once 'CRM/Financial/DAO/FinancialType.php';
+  $dao = new CRM_Financial_DAO_FinancialType();
+  $dao->name = 'In-kind';
+
+  if ( ! $dao->find(true) ) {
+    $dao->name = 'In-kind';
+    $dao->is_deductible = TRUE;
+    $dao->is_active = TRUE;
+    $dao->save();
   }
+
+  E::createDefaultFinancialAccounts($dao);
+
+  $contrib_type_id = $dao->id;
 
   // check if the custom group exists.  if not, create it.
   $params = array(
@@ -618,7 +621,7 @@ function cdntaxreceipts_configure_inkind_fields() {
     $group = array(
       'title' => 'In-kind donation fields',
       'extends' => array( 'Contribution' ),
-      'extends_entity_column_value' => [$financialTypeID],
+      'extends_entity_column_value' => [$contrib_type_id],
       'collapse_display' => 0,
       'style' => 'Inline',
       'is_active' => 1,
