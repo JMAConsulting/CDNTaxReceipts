@@ -332,10 +332,10 @@ function _cdntaxreceipts_writePage(&$f, $pdf_variables, $receipt) {
     // print original AND duplicate copy
     $mymargin_top = $pdf_variables['mymargin_top'];
     _cdntaxreceipts_writeReceipt($f, $pdf_variables);
-    $pdf_variables["mymargin_top"] = $mymargin_top + 90;
+    $pdf_variables["mymargin_top"] = $mymargin_top + 100;
     $pdf_variables["is_duplicate"] = TRUE;
     _cdntaxreceipts_writeReceipt($f, $pdf_variables);
-    $pdf_variables["mymargin_top"] = $mymargin_top + 90*2;
+    $pdf_variables["mymargin_top"] = $mymargin_top + 100*2;
     $pdf_variables["is_duplicate"] = TRUE;
     _cdntaxreceipts_writeReceipt($f, $pdf_variables);
   }
