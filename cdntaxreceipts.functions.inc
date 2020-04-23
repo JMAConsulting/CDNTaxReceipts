@@ -497,9 +497,10 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
     $pdf->Write(10, strtoupper($address_line_3), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
   }
 
+  $valueAdvantage = ts('Value of advantage');
   // If this is an in-kind donation
   if ( !empty($inkind_values) ) {
-
+    $valueAdvantage = ts('Value of advantage to');
     $inkind_str = ts('Donation in-kind: %1', array(1 => $inkind_values[0], 'domain' => 'org.civicrm.cdntaxreceipts'));
 
     if (!empty($inkind_values[3])) {
@@ -509,25 +510,17 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
     }
 
     $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetY($mymargin_top + 68);
+    $pdf->SetXY($mymargin_left + 10, $mymargin_top + $y_detailscolumnstart + 50);
     $pdf->Write(10, $inkind_str, ' - ', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
-    $appraiser = $inkind_values[1] . ' - '. $inkind_values[2];
+    $appraiser = $inkind_values[1] . "\n" . $inkind_values[2];
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 24);
+    $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 30);
 
-    if (strlen($appraiser) < 36) {
-      $pdf->Write(10, ts("Appraiser: %1", array(1 => $appraiser, 'domain' => 'org.civicrm.cdntaxreceipts')));
-    }
-    else {
-      $appraiser_words = explode(" ", substr($appraiser, 0, 36));
-      $appraiser_lastbit = array_pop($appraiser_words);
-      $pdf->Write(10, ts("Appraiser: %1", array(1 => implode(" ", $appraiser_words), 'domain' => 'org.civicrm.cdntaxreceipts')));
-      $appraiser_count = count($appraiser_words);
-      $appraiser_nextline = array_splice(explode(" ", $appraiser), $appraiser_count);
-      $pdf->SetXY($mymargin_left + $x_detailscolumn + 16, $mymargin_top + $y_detailscolumnstart + 28);
-      $pdf->Write(10, implode(" ", $appraiser_nextline));
-    }
+
+    $pdf->Write(10, ts("Appraiser: %1", array(1 => $inkind_values[1], 'domain' => 'org.civicrm.cdntaxreceipts')));
+    $pdf->SetXY($mymargin_left + $x_detailscolumn + 15, $mymargin_top + $y_detailscolumnstart + 34);
+    $pdf->Write(10, $inkind_values[2]);
 
   }
 
@@ -535,7 +528,7 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
   if ($advantage_amount > 0) {
     $pdf->SetXY($mymargin_left+10, $mymargin_top + $y_detailscolumnstart + 38);
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->Write(10, ts("Value of advantage: $%1", array(1 => number_format($advantage_amount, 2), 'domain' => 'org.civicrm.cdntaxreceipts')));
+    $pdf->Write(10, ts("$valueAdvantage: $%1", array(1 => number_format($advantage_amount, 2), 'domain' => 'org.civicrm.cdntaxreceipts')));
   }
   if (!empty($advantage_description)) {
     $pdf->SetXY($mymargin_left + 10, $mymargin_top + $y_detailscolumnstart + 44);
@@ -549,15 +542,15 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
   }
   else {
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetY($mymargin_top + 72);
+    $pdf->SetY($mymargin_top + 82);
     $pdf->Write(10, $line_1, '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
     $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetY($mymargin_top + 76, 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+    $pdf->SetY($mymargin_top + 86, 0, 'L', TRUE, 0, FALSE, FALSE, 0);
     $pdf->Write(10, ts('Canada Revenue Agency: canada.ca/charities-giving', array('domain' => 'org.civicrm.cdntaxreceipts')));
 
     // Bottom center section
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetXY($mymargin_left + 92, $mymargin_top + 74);
+    $pdf->SetXY($mymargin_left + 92, $mymargin_top + 82);
     $pdf->Write(10, ts('Thank you!', array('domain' => 'org.civicrm.cdntaxreceipts')));
 
     // Bottom right section
@@ -572,15 +565,15 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
     if (empty($sig_image)) {
       $sig_image = $pdf_img_files_path . 'authorized-signature.png';
     }
-    $pdf->Image($sig_image, $mymargin_left + 137, $mymargin_top + 67, '', 15);
-    $pdf->Line($mymargin_left + 136, $mymargin_top + 79, $mymargin_left + 186, $mymargin_top + 79);
-    $pdf->SetXY($mymargin_left + 148 - $sig_offset, $mymargin_top + 76);
+    $pdf->Image($sig_image, $mymargin_left + 137, $mymargin_top + 77, '', 15);
+    $pdf->Line($mymargin_left + 136, $mymargin_top + 89, $mymargin_left + 186, $mymargin_top + 89);
+    $pdf->SetXY($mymargin_left + 148 - $sig_offset, $mymargin_top + 86);
     $pdf->SetFont("Helvetica", "I", 7);
     $pdf->Write(10, $signature);
   }
 
   // Line at the bottom
-  $pdf->Line($mymargin_left, $mymargin_top + 85, 198, $mymargin_top + 85, 'dash');
+  $pdf->Line($mymargin_left, $mymargin_top + 95, 198, $mymargin_top + 95, 'dash');
 }
 
 /**************************************

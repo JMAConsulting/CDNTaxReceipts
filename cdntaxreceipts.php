@@ -84,10 +84,34 @@ function cdntaxreceipts_civicrm_validateForm($formName, &$fields, &$files, &$for
     && (CRM_Utils_Array::value('non_deductible_amount', $fields) > 0) && !CRM_Utils_Array::value('advantage_description', $fields)) {
     $errors['advantage_description'] = ts('Please enter a description for advantage amount');
   }
-  // Limit number of characters to 50.
-  if (is_a($form, 'CRM_Contribute_Form_Contribution') && CRM_Utils_Array::value('advantage_description', $fields)) {
-    if (strlen(CRM_Utils_Array::value('advantage_description', $fields)) > 50) {
-      $errors['advantage_description'] = ts('Advantage Description should not be more than 50 characters');
+  if (is_a($form, 'CRM_Contribute_Form_Contribution')) {
+    // Limit number of characters to 50 for description of advantage.
+    if (CRM_Utils_Array::value('advantage_description', $fields)) {
+      if (strlen(CRM_Utils_Array::value('advantage_description', $fields)) > 50) {
+        $errors['advantage_description'] = ts('Advantage Description should not be more than 50 characters');
+      }
+    }
+    if (!empty($fields['financial_type_id']) && civicrm_api3('FinancialType', 'getvalue', [
+      'return' => "name",
+      'id' => $fields['financial_type_id'],
+    ]) == "In-kind") {
+      // Add restriction to field length for in kind custom fields.
+      $customFields = [
+        35 => "Appraised by",
+        50 => "Description of property",
+        40 => "Address of Appraiser",
+      ];
+      $groupTitle = 'In-kind donation fields';
+      foreach ($customFields as $length => $name) {
+        $id = CRM_Core_BAO_CustomField::getCustomFieldID($name, $groupTitle);
+        foreach ($fields as $key => $value) {
+          if (strpos($key, 'custom_' . $id) !== false && !empty($value)) {
+            if (strlen($value) > $length) {
+              $errors[$key] = ts('%1 should not be more than %2 characters', [1 => $name, 2 => $length]);
+            }
+          }
+        }
+      }
     }
   }
 }
