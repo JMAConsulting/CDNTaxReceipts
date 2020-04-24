@@ -505,11 +505,11 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
 
     if (!empty($inkind_values[3])) {
       if ($inkind_values[3] < $amount) {
-          $inkind_str .= ' - ' . ts('Cost: %1', array(1 => $inkind_values[3], 'domain' => 'org.civicrm.cdntaxreceipts'));
+          $inkind_str .= ' - ' . ts('Cost: $%1', array(1 => $inkind_values[3], 'domain' => 'org.civicrm.cdntaxreceipts'));
       }
     }
 
-    $pdf->SetFont('Helvetica', '', 8);
+    $pdf->SetFont('Helvetica', 'B', 8);
     $pdf->SetXY($mymargin_left + 10, $mymargin_top + $y_detailscolumnstart + 50);
     $pdf->Write(10, $inkind_str, ' - ', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
@@ -519,8 +519,19 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
 
 
     $pdf->Write(10, ts("Appraiser: %1", array(1 => $inkind_values[1], 'domain' => 'org.civicrm.cdntaxreceipts')));
-    $pdf->SetXY($mymargin_left + $x_detailscolumn + 15, $mymargin_top + $y_detailscolumnstart + 34);
-    $pdf->Write(10, $inkind_values[2]);
+    $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
+    if (strlen($inkind_values[2]) <= 25) {
+      $pdf->Write(10, ts("Address of Appraiser: %1", array(1 => $inkind_values[2], 'domain' => 'org.civicrm.cdntaxreceipts')));
+    }
+    else {
+      $appraiser_words = explode(" ", substr($inkind_values[2], 0, 25));
+      $pdf->Write(10, ts("Address of Appraiser: %1", array(1 => implode(" ", $appraiser_words), 'domain' => 'org.civicrm.cdntaxreceipts')));
+      $appraiser_count = count($appraiser_words);
+      $appraiser_nextline = array_splice(explode(" ", $inkind_values[2]), $appraiser_count);
+      $pdf->SetXY($mymargin_left + $x_detailscolumn + 30, $mymargin_top + $y_detailscolumnstart + 38);
+      $pdf->Write(10, implode(" ", $appraiser_nextline));
+    }
+
 
   }
 
