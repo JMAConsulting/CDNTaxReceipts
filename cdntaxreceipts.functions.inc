@@ -520,11 +520,11 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
 
     $pdf->Write(10, ts("Appraiser: %1", array(1 => $inkind_values[1], 'domain' => 'org.civicrm.cdntaxreceipts')));
     $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
-    if (strlen($inkind_values[2]) <= 25) {
+    if (strlen($inkind_values[2]) <= 20) {
       $pdf->Write(10, ts("Address of Appraiser: %1", array(1 => $inkind_values[2], 'domain' => 'org.civicrm.cdntaxreceipts')));
     }
     else {
-      $appraiser_words = explode(" ", substr($inkind_values[2], 0, 25));
+      $appraiser_words = explode(" ", substr($inkind_values[2], 0, 20));
       $pdf->Write(10, ts("Address of Appraiser: %1", array(1 => implode(" ", $appraiser_words), 'domain' => 'org.civicrm.cdntaxreceipts')));
       $appraiser_count = count($appraiser_words);
       $appraiser_nextline = array_splice(explode(" ", $inkind_values[2]), $appraiser_count);
