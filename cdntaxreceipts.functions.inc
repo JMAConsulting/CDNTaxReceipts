@@ -513,26 +513,23 @@ function _cdntaxreceipts_writeReceipt(&$pdf, $pdf_variables) {
     $pdf->SetXY($mymargin_left + 10, $mymargin_top + $y_detailscolumnstart + 50);
     $pdf->Write(10, $inkind_str, ' - ', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
 
-    $appraiser = $inkind_values[1] . "\n" . $inkind_values[2];
     $pdf->SetFont('Helvetica', 'B', 8);
     $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 30);
 
-
     $pdf->Write(10, ts("Appraiser: %1", array(1 => $inkind_values[1], 'domain' => 'org.civicrm.cdntaxreceipts')));
     $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
-    if (strlen($inkind_values[2]) <= 20) {
-      $pdf->Write(10, ts("Address of Appraiser: %1", array(1 => $inkind_values[2], 'domain' => 'org.civicrm.cdntaxreceipts')));
-    }
-    else {
-      $appraiser_words = explode(" ", substr($inkind_values[2], 0, 20));
-      $pdf->Write(10, ts("Address of Appraiser: %1", array(1 => implode(" ", $appraiser_words), 'domain' => 'org.civicrm.cdntaxreceipts')));
-      $appraiser_count = count($appraiser_words);
-      $appraiser_nextline = array_splice(explode(" ", $inkind_values[2]), $appraiser_count);
+
+    if (!empty($inkind_values[2])) {
+      $addressString = wordwrap($inkind_values[2], 20, CRM_Core_DAO::VALUE_SEPARATOR);
+      $lines = explode(CRM_Core_DAO::VALUE_SEPARATOR, $addressString);
+      $pdf->Write(10, ts("Address of Appraiser: %1", array(1 => $lines[0], 'domain' => 'org.civicrm.cdntaxreceipts')));
       $pdf->SetXY($mymargin_left + $x_detailscolumn + 30, $mymargin_top + $y_detailscolumnstart + 38);
-      $pdf->Write(10, implode(" ", $appraiser_nextline));
+      foreach ($lines as $key => $line) {
+        if ($key) {
+          $pdf->Write(10, $line);
+        }
+      }
     }
-
-
   }
 
   // Advantage fields.
