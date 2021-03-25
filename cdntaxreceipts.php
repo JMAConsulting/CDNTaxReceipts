@@ -62,10 +62,8 @@ function cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
   $action = '';
   foreach($types as $type) {
     $post = '_qf_ContributionView_submit_'.$type;
-    if (isset($_POST[$post])) {
-      if ($_POST[$post] == ts('Tax Receipt', array('domain' => 'org.civicrm.cdntaxreceipts'))) {
-        $action = $post;
-      }
+    if (!empty($_POST[$post])) {
+      $action = $post;
     }
   }
   if (empty($action)) {
